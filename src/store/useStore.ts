@@ -1,0 +1,316 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Phone, Customer, EMISale, Collection, StockMovement, PhoneStatus, User, ReservationRequest, ReservationStatus } from '../types';
+import { GoogleSheetsService } from '../services/GoogleSheetsService';
+
+interface AppState {
+  phones: Phone[];
+  customers: Customer[];
+  emiSales: EMISale[];
+  collections: Collection[];
+  stockMovements: StockMovement[];
+  users: User[];
+  currentUser: User | null;
+  reservations: ReservationRequest[];
+  
+  // App Sync State
+  isLoading: boolean;
+  initFromSheets: () => Promise<void>;
+  
+  // Auth
+  login: (username: string) => void;
+  logout: () => void;
+  
+  // Reservations
+  addReservation: (reservation: ReservationRequest) => Promise<void>;
+  updateReservationStatus: (id: string, newStatus: ReservationStatus) => Promise<void>;
+
+  // Async Actions linked to Google Sheets Backend
+  addPhone: (phone: Phone) => Promise<void>;
+  updatePhone: (id: string, updates: Partial<Phone>) => Promise<void>;
+  deletePhone: (id: string) => Promise<void>;
+  changePhoneStatus: (productId: string, newStatus: PhoneStatus, note?: string, customerId?: string, customerName?: string) => Promise<void>;
+  
+  addCustomer: (customer: Customer) => Promise<void>;
+  updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  
+  addEmiSale: (sale: EMISale) => Promise<void>;
+  addCollection: (collection: Collection) => Promise<void>;
+}
+
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      phones: [],
+      customers: [],
+      emiSales: [],
+      collections: [],
+      stockMovements: [],
+      users: [
+        { id: '1', username: 'admin', role: 'Admin', fullName: 'System Admin' },
+        { id: '2', username: 'sales', role: 'SalesOfficer', fullName: 'Sales Officer' },
+        { id: '3', username: 'inventory', role: 'InventoryManager', fullName: 'Inventory Manager' },
+      ],
+      currentUser: null,
+      reservations: [],
+      isLoading: false,
+
+      // Initializer to load remote configurations if GAS is connected
+      initFromSheets: async () => {
+        set({ isLoading: true });
+        try {
+          const [phonesRes, customersRes, emiSalesRes, collectionsRes, smRes, resvRes] = await Promise.all([
+             GoogleSheetsService.getAll('Products'),
+             GoogleSheetsService.getAll('Customers'),
+             GoogleSheetsService.getAll('EMISales'),
+             GoogleSheetsService.getAll('EMICollections'),
+             GoogleSheetsService.getAll('StockMovement'),
+             GoogleSheetsService.getAll('ReservationRequests')
+          ]);
+          
+          if (phonesRes && phonesRes.length > 0) set({ phones: phonesRes as Phone[] });
+          if (customersRes && customersRes.length > 0) set({ customers: customersRes as Customer[] });
+          if (emiSalesRes && emiSalesRes.length > 0) set({ emiSales: emiSalesRes as EMISale[] });
+          if (collectionsRes && collectionsRes.length > 0) set({ collections: collectionsRes as Collection[] });
+          if (smRes && smRes.length > 0) set({ stockMovements: smRes as StockMovement[] });
+          if (resvRes && resvRes.length > 0) set({ reservations: resvRes as ReservationRequest[] });
+        } catch (err) {
+          console.error("Failed to sync from Google Sheets.", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      login: (username) => {
+        const user = get().users.find(u => u.username === username);
+        if (user) {
+          set({ currentUser: user });
+        }
+      },
+
+      logout: () => {
+        set({ currentUser: null });
+      },
+
+      addReservation: async (reservation) => {
+        set((state) => ({ reservations: [reservation, ...state.reservations] }));
+        try {
+          await GoogleSheetsService.create('ReservationRequests', reservation);
+        } catch (error: any) {
+          set((state) => ({ reservations: state.reservations.filter(r => r.id !== reservation.id) }));
+          alert("Error adding reservation: " + error.message);
+        }
+      },
+
+      updateReservationStatus: async (id, newStatus) => {
+        const previous = get().reservations;
+        const reservation = previous.find(r => r.id === id);
+        
+        if (!reservation) return;
+
+        set((state) => ({
+          reservations: state.reservations.map(r => r.id === id ? { ...r, status: newStatus } : r)
+        }));
+
+        try {
+          await GoogleSheetsService.update('ReservationRequests', id, { status: newStatus });
+          if (newStatus === 'Approved') {
+            await get().changePhoneStatus(reservation.productId, 'Reserved', 'Reservation Approved', undefined, reservation.customerName);
+          }
+        } catch (error: any) {
+          set({ reservations: previous });
+          alert("Error updating reservation: " + error.message);
+        }
+      },
+      
+      addPhone: async (phone) => {
+        set((state) => ({ phones: [phone, ...state.phones] })); // Optimistic UI Update
+        try {
+          await GoogleSheetsService.create('Products', phone); // Push direct API execution
+        } catch (error: any) {
+          set((state) => ({ phones: state.phones.filter(p => p.id !== phone.id) })); // Rollback
+          alert("Error adding phone: " + error.message);
+        }
+      },
+      
+      updatePhone: async (id, updates) => {
+        const previousPhones = get().phones;
+        set((state) => ({ phones: state.phones.map(p => p.id === id ? { ...p, ...updates } : p) }));
+        try {
+          await GoogleSheetsService.update('Products', id, updates);
+        } catch (error: any) {
+             set({ phones: previousPhones });
+             alert("Error updating phone: " + error.message);
+        }
+      },
+      
+      deletePhone: async (id) => {
+        const previousPhones = get().phones;
+        set((state) => ({ phones: state.phones.filter(p => p.id !== id) }));
+        try {
+          await GoogleSheetsService.delete('Products', id);
+        } catch (error: any) {
+          set({ phones: previousPhones });
+          alert("Error deleting phone: " + error.message);
+        }
+      },
+      
+      changePhoneStatus: async (productId, newStatus, note = '', customerId?: string, customerName?: string) => {
+        const phone = get().phones.find(p => p.id === productId);
+        if (!phone || phone.status === newStatus) return;
+        
+        const oldStatus = phone.status;
+        const previousPhones = get().phones;
+        const previousMovements = get().stockMovements;
+        const previousSales = get().emiSales;
+        
+        const movement: StockMovement = {
+          id: crypto.randomUUID(),
+          productId: phone.id,
+          imei1: phone.imei1,
+          oldStatus,
+          newStatus,
+          changedBy: 'Admin', // Static for now, could be passed in
+          changedAt: new Date().toISOString(),
+          note,
+          customerName
+        };
+        
+        let updates: Partial<Phone> = { status: newStatus, statusNote: note };
+        
+        if (newStatus === 'Reserved') {
+          updates.reservedForCustomerId = customerId;
+          updates.reservedForCustomerName = customerName;
+        } else if (newStatus === 'Sold') {
+          updates.soldToCustomerId = customerId;
+          updates.soldToCustomerName = customerName;
+        } else if (newStatus === 'Available' || newStatus === 'Damaged' || newStatus === 'Returned') {
+          // Clear reservations / sole info if reverting to these
+          updates.reservedForCustomerId = '';
+          updates.reservedForCustomerName = '';
+        }
+
+        set((state) => {
+          let updatedSales = state.emiSales;
+          // Return Logic
+          if (newStatus === 'Returned') {
+             updatedSales = state.emiSales.filter(s => !(s.phoneId === phone.id && s.status === 'Active'));
+          }
+          
+          return {
+             phones: state.phones.map(p => p.id === productId ? { ...p, ...updates } : p),
+             stockMovements: [movement, ...state.stockMovements],
+             emiSales: updatedSales
+          };
+        });
+        
+        try {
+           const updateRes = await GoogleSheetsService.update('Products', productId, updates);
+           await GoogleSheetsService.create('StockMovement', {
+              ...movement,
+              id: updateRes.id || '' // use created or something, let GAS handle id
+           });
+           // Backend shouldn't strictly need us to manually delete EMI, but ideally we mark it refunded or so
+        } catch (error: any) {
+           set({ phones: previousPhones, stockMovements: previousMovements, emiSales: previousSales });
+           alert("Error changing status: " + error.message);
+        }
+      },
+      
+      addCustomer: async (customer) => {
+        set((state) => ({ customers: [customer, ...state.customers] }));
+        try {
+          await GoogleSheetsService.create('Customers', customer);
+        } catch (error: any) {
+          set((state) => ({ customers: state.customers.filter(c => c.id !== customer.id) }));
+          alert("Error adding customer: " + error.message);
+        }
+      },
+      
+      updateCustomer: async (id, updates) => {
+        const previous = get().customers;
+        set((state) => ({ customers: state.customers.map(c => c.id === id ? { ...c, ...updates } : c) }));
+        try {
+          await GoogleSheetsService.update('Customers', id, updates);
+        } catch (error: any) {
+          set({ customers: previous });
+          alert("Error updating customer: " + error.message);
+        }
+      },
+      
+      deleteCustomer: async (id) => {
+        const previous = get().customers;
+        set((state) => ({ customers: state.customers.filter(c => c.id !== id) }));
+        try {
+          await GoogleSheetsService.delete('Customers', id);
+        } catch (error: any) {
+          set({ customers: previous });
+          alert("Error deleting customer: " + error.message);
+        }
+      },
+      
+      addEmiSale: async (sale) => {
+        const previousSales = get().emiSales;
+        const previousPhones = get().phones;
+        
+        set((state) => ({ 
+          emiSales: [sale, ...state.emiSales],
+          phones: state.phones.map(p => p.id === sale.phoneId ? { ...p, status: 'Sold' } : p)
+        }));
+        
+        try {
+          await GoogleSheetsService.create('EMISales', sale);
+          await GoogleSheetsService.update('Products', sale.phoneId, { status: 'Sold' });
+        } catch (error: any) {
+           set({ emiSales: previousSales, phones: previousPhones });
+           alert("Error creating sale: " + error.message);
+        }
+      },
+      
+      addCollection: async (collection) => {
+        const previousSales = get().emiSales;
+        const previousCollections = get().collections;
+        
+        set((state) => {
+          const sale = state.emiSales.find(s => s.id === collection.emiSaleId);
+          if (!sale) return state;
+          
+          let newStatus = sale.status;
+          let newPaid = sale.paidInstallments;
+          if (collection.paymentType === 'Monthly Installment') {
+             newPaid += 1;
+             if (newPaid >= sale.emiMonths) newStatus = 'Completed';
+          }
+          
+          return {
+            collections: [collection, ...state.collections],
+            emiSales: state.emiSales.map(s => s.id === collection.emiSaleId ? {
+              ...s,
+              paidInstallments: newPaid,
+              status: newStatus
+            } : s)
+          };
+        });
+        
+        try {
+           await GoogleSheetsService.create('EMICollections', collection);
+           // Also push the parent EMI status update remotely
+           const updatedSale = get().emiSales.find(s => s.id === collection.emiSaleId);
+           if (updatedSale) {
+               await GoogleSheetsService.update('EMISales', updatedSale.id, { 
+                   paidInstallments: updatedSale.paidInstallments, 
+                   status: updatedSale.status 
+               });
+           }
+        } catch (error: any) {
+           set({ collections: previousCollections, emiSales: previousSales });
+           alert("Error adding collection: " + error.message);
+        }
+      }
+    }),
+    {
+      name: 'angaria-erp-storage'
+    }
+  )
+);

@@ -1,0 +1,182 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { useStore } from '../store/useStore';
+import { Download, FileText } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
+
+type ReportType = 'All Stock' | 'Available Stock' | 'Reserved Stock' | 'Sold Stock' | 'Returned Stock' | 'Damaged Stock' | 'Customer' | 'EMI' | 'Collection';
+
+import { getBusinessIds } from '../utils/businessIds';
+
+export function Reports() {
+  const { phones, customers, emiSales, collections, stockMovements, currentUser } = useStore();
+  const [selectedReport, setSelectedReport] = useState<ReportType>('All Stock');
+
+  const businessIds = React.useMemo(() => getBusinessIds(emiSales), [emiSales]);
+
+  if (currentUser?.role !== 'Admin') {
+    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
+  }
+
+  const getReportData = () => {
+    switch(selectedReport) {
+      case 'All Stock':
+        return phones.map(p => ({
+          ID: p.id, Brand: p.brand, Model: p.model, IMEI1: p.imei1,
+          'Purchase Price': p.purchasePrice, 'Selling Price': p.sellingPrice,
+          Status: p.status, Date: p.purchaseDate
+        }));
+      case 'Available Stock':
+      case 'Returned Stock':
+      case 'Damaged Stock':
+        return phones.filter(p => `${p.status} Stock` === selectedReport).map(p => ({
+          ID: p.id, Brand: p.brand, Model: p.model, IMEI1: p.imei1,
+          'Purchase Price': p.purchasePrice, 'Selling Price': p.sellingPrice,
+          Status: p.status, Date: p.purchaseDate
+        }));
+      case 'Reserved Stock':
+        return phones.filter(p => p.status === 'Reserved').map(p => {
+          const move = (stockMovements || []).find(m => m.productId === p.id && m.newStatus === 'Reserved');
+          return {
+            Brand: p.brand, Model: p.model, IMEI1: p.imei1,
+            'Reserved Customer': p.reservedForCustomerName || '-',
+            'Reserved Date': move?.changedAt ? new Date(move.changedAt).toLocaleDateString() : p.purchaseDate
+          };
+        });
+      case 'Sold Stock':
+        return phones.filter(p => p.status === 'Sold').map(p => {
+          const move = (stockMovements || []).find(m => m.productId === p.id && m.newStatus === 'Sold');
+          return {
+            Brand: p.brand, Model: p.model, IMEI1: p.imei1,
+            'Customer': p.soldToCustomerName || '-',
+            'Sale Date': move?.changedAt ? new Date(move.changedAt).toLocaleDateString() : '-'
+          };
+        });
+      case 'Customer':
+        return customers.map(c => ({
+          ID: c.id, Name: c.fullName, Mobile: c.mobile, NID: c.nidObject,
+          Address: c.address, 'Risk Rating': c.riskRating
+        }));
+      case 'EMI':
+        return emiSales.map(s => {
+          const cust = customers.find(c => c.id === s.customerId);
+          return {
+            'Sale ID': businessIds.get(s.id)?.saleId || s.id, Customer: cust?.fullName, 'Date': s.saleDate ? new Date(s.saleDate).toLocaleDateString('en-GB') : '-',
+            Total: s.totalInstallmentAmount, Monthly: s.monthlyInstallment,
+            'Paid Terms': `${s.paidInstallments}/${s.emiMonths}`, Status: s.status
+          };
+        });
+      case 'Collection':
+        return collections.map(c => {
+          const sale = emiSales.find(s => s.id === c.emiSaleId);
+          return {
+            ID: c.id, 'Sale ID': sale ? businessIds.get(sale.id)?.saleId : c.emiSaleId, Amount: c.amountPaid,
+            Date: c.paymentDate ? new Date(c.paymentDate).toLocaleDateString('en-GB') : '-', Type: c.paymentType, Method: c.paymentMethod
+          };
+        });
+    }
+  };
+
+  const handleExportExcel = () => {
+    const data = getReportData();
+    if (data.length === 0) {
+      toast.error('No data found for this report.');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, selectedReport);
+    XLSX.writeFile(wb, `${selectedReport}_Report.xlsx`);
+    toast.success('Excel exported successfully');
+  };
+
+  const handleExportPdf = () => {
+    const data = getReportData();
+    if (data.length === 0) {
+      toast.error('No data found for this report.');
+      return;
+    }
+
+    const keys = Object.keys(data[0]);
+    
+    let html = `
+      <html>
+        <head>
+          <title>${selectedReport} Report</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; }
+            h1 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <h1>Angaria ERP - ${selectedReport} Report</h1>
+          <table>
+            <thead>
+              <tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${data.map(row => `<tr>${keys.map(k => `<td>${(row as any)[k] || ''}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+          <script>window.onload = () => window.print();</script>
+        </body>
+      </html>
+    `;
+
+    const w = window.open();
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Reports & Analytics</h2>
+          <p className="text-muted-foreground w-full">Generate business reports and export data.</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Generate Report</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-wrap gap-4">
+            {(['All Stock', 'Available Stock', 'Reserved Stock', 'Sold Stock', 'Returned Stock', 'Damaged Stock', 'Customer', 'EMI', 'Collection'] as ReportType[]).map(type => (
+              <Button 
+                key={type} 
+                variant={selectedReport === type ? 'default' : 'outline'}
+                onClick={() => setSelectedReport(type)}
+              >
+                {type} Report
+              </Button>
+            ))}
+          </div>
+
+          <div className="bg-muted/50 p-6 rounded-lg flex flex-col items-center justify-center gap-4 border border-dashed">
+            <div className="text-center space-y-1">
+              <h3 className="font-semibold">{selectedReport} Report Ready</h3>
+              <p className="text-sm text-muted-foreground">Contains {getReportData().length} records</p>
+            </div>
+            <div className="flex gap-4">
+              <Button onClick={handleExportExcel} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                <Download className="w-4 h-4" /> Export Excel
+              </Button>
+              <Button onClick={handleExportPdf} className="gap-2" variant="outline">
+                <FileText className="w-4 h-4" /> Export PDF (Print)
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
