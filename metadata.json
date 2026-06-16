@@ -1,0 +1,8 @@
+{
+  "name": "Angaria ERP",
+  "description": "Mobile Phone EMI & Inventory Management System for Angaria Small Business Co-Society",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
