@@ -248,7 +248,7 @@ export function Reports() {
 
   </div>
 
-  <h2>রিজার্ভকৃত ফোনসমূহ</h2>
+  <h2>বিক্রিত ফোনসমূহ</h2>
 
   <table>
     <tr>
@@ -258,7 +258,7 @@ export function Reports() {
       <th>Customer</th>
     </tr>
 
-    ${reserved.map(r => {
+    ${sold.map(r => {
 
       const phone = phones.find(
         p => p.id === r.productId
