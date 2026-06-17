@@ -126,6 +126,204 @@ export function Reports() {
 
     const keys = Object.keys(data[0]);
     
+    if (selectedReport === 'Daily Operations') {
+
+  const sold = stockMovements.filter(m => m.newStatus === 'Sold');
+  const reserved = stockMovements.filter(m => m.newStatus === 'Reserved');
+  const returned = stockMovements.filter(m => m.newStatus === 'Returned');
+  const damaged = stockMovements.filter(m => m.newStatus === 'Damaged');
+
+  const available = phones.filter(p => p.status === 'Available');
+
+  let reportHtml = `
+  <html>
+  <head>
+    <title>Daily Operations Report</title>
+
+    <style>
+      body{
+        font-family: Arial;
+        padding:30px;
+      }
+
+      h1,h2,h3{
+        margin:0;
+      }
+
+      .header{
+        text-align:center;
+        margin-bottom:25px;
+      }
+
+      .cards{
+        display:flex;
+        gap:15px;
+        margin-bottom:25px;
+      }
+
+      .card{
+        flex:1;
+        border:1px solid #ddd;
+        padding:15px;
+        border-radius:8px;
+        text-align:center;
+      }
+
+      table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+        margin-bottom:25px;
+      }
+
+      th,td{
+        border:1px solid #ddd;
+        padding:8px;
+        font-size:12px;
+      }
+
+      th{
+        background:#f3f4f6;
+      }
+
+      .signatures{
+        display:flex;
+        justify-content:space-between;
+        margin-top:60px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+  <div class="header">
+    <h1>উপকার</h1>
+    <h3>আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</h3>
+    <h2>Daily Operations Report</h2>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <h3>${available.length}</h3>
+      <p>Available</p>
+    </div>
+
+    <div class="card">
+      <h3>${reserved.length}</h3>
+      <p>Reserved</p>
+    </div>
+
+    <div class="card">
+      <h3>${sold.length}</h3>
+      <p>Sold</p>
+    </div>
+
+    <div class="card">
+      <h3>${returned.length}</h3>
+      <p>Returned</p>
+    </div>
+
+    <div class="card">
+      <h3>${damaged.length}</h3>
+      <p>Damaged</p>
+    </div>
+
+  </div>
+
+  <h2>Reserved Phones</h2>
+
+  <table>
+    <tr>
+      <th>Brand</th>
+      <th>Model</th>
+      <th>IMEI</th>
+      <th>Customer</th>
+    </tr>
+
+    ${reserved.map(r => {
+
+      const phone = phones.find(
+        p => p.id === r.productId
+      );
+
+      return `
+      <tr>
+        <td>${phone?.brand || ''}</td>
+        <td>${phone?.model || ''}</td>
+        <td>${phone?.imei1 || ''}</td>
+        <td>${r.customerName || '-'}</td>
+      </tr>
+      `;
+    }).join('')}
+  </table>
+
+  <h2>Sold Phones</h2>
+
+  <table>
+    <tr>
+      <th>Brand</th>
+      <th>Model</th>
+      <th>IMEI</th>
+      <th>Customer</th>
+    </tr>
+
+    ${sold.map(r => {
+
+      const phone = phones.find(
+        p => p.id === r.productId
+      );
+
+      return `
+      <tr>
+        <td>${phone?.brand || ''}</td>
+        <td>${phone?.model || ''}</td>
+        <td>${phone?.imei1 || ''}</td>
+        <td>${r.customerName || '-'}</td>
+      </tr>
+      `;
+    }).join('')}
+  </table>
+
+  <div class="signatures">
+
+    <div>
+      ___________________
+      <br>
+      Prepared By
+    </div>
+
+    <div>
+      ___________________
+      <br>
+      Checked By
+    </div>
+
+    <div>
+      ___________________
+      <br>
+      Approved By
+    </div>
+
+  </div>
+
+  <script>
+    window.onload = () => window.print();
+  </script>
+
+  </body>
+  </html>
+  `;
+
+  const w = window.open();
+
+  if(w){
+    w.document.write(reportHtml);
+    w.document.close();
+  }
+
+  return;
+}
     let html = `
       <html>
         <head>
