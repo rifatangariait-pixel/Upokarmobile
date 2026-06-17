@@ -6,7 +6,7 @@ import { Download, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
-type ReportType = 'All Stock' | 'Available Stock' | 'Reserved Stock' | 'Sold Stock' | 'Returned Stock' | 'Damaged Stock' | 'Customer' | 'EMI' | 'Collection';
+type ReportType = 'All Stock' | 'Available Stock' | 'Reserved Stock' | 'Sold Stock' | 'Returned Stock' | 'Damaged Stock' | 'Customer' | 'EMI' | 'Collection' | 'Daily Operations';
 
 import { getBusinessIds } from '../utils/businessIds';
 
@@ -68,6 +68,31 @@ export function Reports() {
             'Paid Terms': `${s.paidInstallments}/${s.emiMonths}`, Status: s.status
           };
         });
+        case 'Daily Operations':
+  return stockMovements.map(m => {
+    const phone = phones.find(p => p.id === m.productId);
+
+    return {
+      Date: new Date(m.changedAt).toLocaleDateString('en-GB'),
+      Time: new Date(m.changedAt).toLocaleTimeString('en-GB'),
+
+      Activity: m.newStatus,
+
+      Brand: phone?.brand || '',
+      Model: phone?.model || '',
+
+      IMEI1: phone?.imei1 || '',
+      IMEI2: phone?.imei2 || '',
+
+      Customer: m.customerName || '-',
+
+      PreviousStatus: m.oldStatus,
+      CurrentStatus: m.newStatus,
+
+      Staff: m.changedBy,
+      Note: m.note || '-'
+    };
+  });
       case 'Collection':
         return collections.map(c => {
           const sale = emiSales.find(s => s.id === c.emiSaleId);
@@ -150,7 +175,7 @@ export function Reports() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-wrap gap-4">
-            {(['All Stock', 'Available Stock', 'Reserved Stock', 'Sold Stock', 'Returned Stock', 'Damaged Stock', 'Customer', 'EMI', 'Collection'] as ReportType[]).map(type => (
+            {(['All Stock', 'Available Stock', 'Reserved Stock', 'Sold Stock', 'Returned Stock', 'Damaged Stock', 'Customer', 'EMI', 'Collection', 'Daily Operations'] as ReportType[]).map(type => (
               <Button 
                 key={type} 
                 variant={selectedReport === type ? 'default' : 'outline'}
