@@ -197,41 +197,58 @@ export function Reports() {
   <body>
 
   <div class="header">
-    <h1>উপকার</h1>
-    <h3>আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</h3>
-    <h2>Daily Operations Report</h2>
-  </div>
+
+  <h1 style="font-size:40px;color:#0f172a;margin-bottom:5px;">
+    উপকার
+  </h1>
+
+  <h3 style="margin:0;color:#475569;">
+    আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন
+  </h3>
+
+  <hr style="margin:15px 0">
+
+  <h2 style="color:#1e40af;">
+    দৈনিক স্টক ও কার্যক্রম রিপোর্ট
+  </h2>
+
+  <p>
+    রিপোর্ট তারিখ:
+    ${new Date().toLocaleDateString('en-GB')}
+  </p>
+
+</div>
 
   <div class="cards">
 
     <div class="card">
       <h3>${available.length}</h3>
-      <p>Available</p>
+      <p>স্টকে আছে</p>
     </div>
 
     <div class="card">
       <h3>${reserved.length}</h3>
-      <p>Reserved</p>
+      <p>রিজার্ভ</p>
     </div>
 
     <div class="card">
       <h3>${sold.length}</h3>
-      <p>Sold</p>
+      <p>বিক্রিত</p>
     </div>
 
     <div class="card">
       <h3>${returned.length}</h3>
-      <p>Returned</p>
+      <p>রিটার্ন</p>
     </div>
 
     <div class="card">
       <h3>${damaged.length}</h3>
-      <p>Damaged</p>
+      <p>ড্যামেজ</p>
     </div>
 
   </div>
 
-  <h2>Reserved Phones</h2>
+  <h2>রিজার্ভকৃত ফোনসমূহ</h2>
 
   <table>
     <tr>
@@ -258,32 +275,48 @@ export function Reports() {
     }).join('')}
   </table>
 
-  <h2>Sold Phones</h2>
+  <h2>স্টকে থাকা ফোনসমূহ</h2>
 
-  <table>
-    <tr>
-      <th>Brand</th>
-      <th>Model</th>
-      <th>IMEI</th>
-      <th>Customer</th>
-    </tr>
+<table>
+<tr>
+<th>ব্র্যান্ড</th>
+<th>মডেল</th>
+<th>IMEI-1</th>
+<th>IMEI-2</th>
+</tr>
 
-    ${sold.map(r => {
+${available.map(phone => `
+<tr>
+<td>${phone.brand}</td>
+<td>${phone.model}</td>
+<td>${phone.imei1}</td>
+<td>${phone.imei2 || '-'}</td>
+</tr>
+`).join('')}
 
-      const phone = phones.find(
-        p => p.id === r.productId
-      );
+</table>
+<h2>রিটার্নকৃত ফোনসমূহ</h2>
 
-      return `
-      <tr>
-        <td>${phone?.brand || ''}</td>
-        <td>${phone?.model || ''}</td>
-        <td>${phone?.imei1 || ''}</td>
-        <td>${r.customerName || '-'}</td>
-      </tr>
-      `;
-    }).join('')}
-  </table>
+<table>
+<tr>
+<th>ব্র্যান্ড</th>
+<th>মডেল</th>
+<th>IMEI-1</th>
+<th>IMEI-2</th>
+</tr>
+
+${phones
+.filter(p => p.status === 'Returned')
+.map(phone => `
+<tr>
+<td>${phone.brand}</td>
+<td>${phone.model}</td>
+<td>${phone.imei1}</td>
+<td>${phone.imei2 || '-'}</td>
+</tr>
+`).join('')}
+
+</table>
 
   <div class="signatures">
 
