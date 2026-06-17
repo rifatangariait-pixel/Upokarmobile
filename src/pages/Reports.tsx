@@ -317,6 +317,28 @@ ${phones
 `).join('')}
 
 </table>
+<h2>ড্যামেজ ফোনসমূহ</h2>
+
+<table>
+<tr>
+<th>ব্র্যান্ড</th>
+<th>মডেল</th>
+<th>IMEI-1</th>
+<th>IMEI-2</th>
+</tr>
+
+${phones
+.filter(p => p.status === 'Damaged')
+.map(phone => `
+<tr>
+<td>${phone.brand}</td>
+<td>${phone.model}</td>
+<td>${phone.imei1}</td>
+<td>${phone.imei2 || '-'}</td>
+</tr>
+`).join('')}
+
+</table>
 
   <div class="signatures">
 
