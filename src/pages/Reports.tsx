@@ -251,29 +251,32 @@ export function Reports() {
   <h2>বিক্রিত ফোনসমূহ</h2>
 
   <table>
-    <tr>
-      <th>Brand</th>
-      <th>Model</th>
-      <th>IMEI</th>
-      <th>Customer</th>
-    </tr>
+   <h2>বিক্রিত ফোনসমূহ</h2>
 
-    ${reserved.map(r => {
+<table>
+<tr>
+<th>ব্র্যান্ড</th>
+<th>মডেল</th>
+<th>IMEI-1</th>
+<th>IMEI-2</th>
+<th>গ্রাহক</th>
+<th>মোবাইল</th>
+<th>বিক্রির তারিখ</th>
+</tr>
 
-      const phone = phones.find(
-        p => p.id === r.productId
-      );
+${soldPhones.map(phone => `
+<tr>
+<td>${phone.brand}</td>
+<td>${phone.model}</td>
+<td>${phone.imei1}</td>
+<td>${phone.imei2 || '-'}</td>
+<td>${phone.customerName}</td>
+<td>${phone.customerMobile}</td>
+<td>${phone.saleDate}</td>
+</tr>
+`).join('')}
 
-      return `
-      <tr>
-        <td>${phone?.brand || ''}</td>
-        <td>${phone?.model || ''}</td>
-        <td>${phone?.imei1 || ''}</td>
-        <td>${r.customerName || '-'}</td>
-      </tr>
-      `;
-    }).join('')}
-  </table>
+</table>
 
   <h2>স্টকে থাকা ফোনসমূহ</h2>
 
