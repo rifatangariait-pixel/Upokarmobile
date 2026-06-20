@@ -135,6 +135,7 @@ export function Reports() {
       .toLocaleDateString('en-GB') === today
 );
 
+const today = new Date().toLocaleDateString('en-GB');
 const reserved = stockMovements.filter(
   m =>
     m.newStatus === 'Reserved' &&
@@ -159,8 +160,6 @@ const damaged = stockMovements.filter(
   const available = phones.filter(
   p => p.status === 'Available'
 );
-
-const today = new Date().toLocaleDateString('en-GB');
 
 const soldPhones = Array.from(
 
@@ -381,17 +380,22 @@ ${available.map(phone => `
 <th>IMEI-2</th>
 </tr>
 
-${phones
-.filter(p => p.status === 'Returned')
-.map(phone => `
-<tr>
-<td>${phone.brand}</td>
-<td>${phone.model}</td>
-<td>${phone.imei1}</td>
-<td>${phone.imei2 || '-'}</td>
-</tr>
-`).join('')}
+${returned.map(item => {
 
+const phone = phones.find(
+  p => p.id === item.productId
+);
+
+return `
+<tr>
+<td>${phone?.brand || ''}</td>
+<td>${phone?.model || ''}</td>
+<td>${phone?.imei1 || ''}</td>
+<td>${phone?.imei2 || '-'}</td>
+</tr>
+`;
+
+}).join('')}
 </table>
 <h2>ড্যামেজ ফোনসমূহ</h2>
 
@@ -403,9 +407,7 @@ ${phones
 <th>IMEI-2</th>
 </tr>
 
-${phones
-.filter(p => p.status === 'Damaged')
-.map(phone => `
+${damaged.map(phone => `
 <tr>
 <td>${phone.brand}</td>
 <td>${phone.model}</td>
@@ -482,12 +484,20 @@ ${phones
       </html>
     `;
 
-    const w = window.open();
-    if (w) {
-      w.document.write(html);
-      w.document.close();
-    }
-  };
+    const w = window.open(
+  '',
+  '_blank',
+  'width=1200,height=800'
+);
+
+if (!w) {
+  toast.error('Popup blocked by browser');
+  return;
+}
+
+w.document.open();
+w.document.write(html);
+w.document.close();
 
   return (
     <div className="space-y-6">
