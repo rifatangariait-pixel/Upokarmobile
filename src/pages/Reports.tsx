@@ -128,10 +128,21 @@ export function Reports() {
     
     if (selectedReport === 'Daily Operations') {
 
-  const sold = stockMovements.filter(m => m.newStatus === 'Sold');
-  const reserved = stockMovements.filter(m => m.newStatus === 'Reserved');
-  const returned = stockMovements.filter(m => m.newStatus === 'Returned');
-  const damaged = stockMovements.filter(m => m.newStatus === 'Damaged');
+  const sold = stockMovements.filter(
+  m => m.newStatus === 'Sold'
+);
+
+const reserved = stockMovements.filter(
+  m => m.newStatus === 'Reserved'
+);
+
+const returned = stockMovements.filter(
+  m => m.newStatus === 'Returned'
+);
+
+const damaged = stockMovements.filter(
+  m => m.newStatus === 'Damaged'
+);
 
   const available = phones.filter(
   p => p.status === 'Available'
