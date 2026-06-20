@@ -118,6 +118,8 @@ export function Reports() {
   };
 
   const handleExportPdf = () => {
+    alert('PDF Clicked');
+  console.log('PDF Clicked');
     const data = getReportData();
     if (data.length === 0) {
       toast.error('No data found for this report.');
@@ -435,12 +437,16 @@ return `
   </html>
   `;
 
-  const w = window.open();
+ const w = window.open('', '_blank');
 
-  if(w){
-    w.document.write(reportHtml);
-    w.document.close();
-  }
+if (!w) {
+  toast.error('Popup blocked by browser');
+  return;
+}
+
+w.document.open();
+w.document.write(reportHtml);
+w.document.close();
 
   return;
 }
@@ -485,6 +491,7 @@ if (!w) {
 w.document.open();
 w.document.write(html);
 w.document.close();
+}
 
   return (
     <div className="space-y-6">
