@@ -118,8 +118,7 @@ export function Reports() {
   };
 
   const handleExportPdf = () => {
-    alert('PDF Clicked');
-  console.log('PDF Clicked');
+    
     const data = getReportData();
     if (data.length === 0) {
       toast.error('No data found for this report.');
