@@ -162,47 +162,54 @@ const damaged = stockMovements.filter(
 
 const today = new Date().toLocaleDateString('en-GB');
 
-const soldPhones = stockMovements
-  .filter(
-    m =>
-      m.newStatus === 'Sold' &&
-      new Date(m.changedAt).toLocaleDateString('en-GB') === today
-  )
-  .map(m => {
+const soldPhones = Array.from(
 
-    const phone = phones.find(
-      p => p.id === m.productId
-    );
+  new Map(
 
-    const sale = emiSales.find(
-      s => s.phoneId === m.productId
-    );
+    stockMovements
+      .filter(
+        m =>
+          m.newStatus === 'Sold' &&
+          new Date(m.changedAt)
+            .toLocaleDateString('en-GB') === today
+      )
+      .map(m => [m.productId, m])
 
-    const customer = customers.find(
-      c => c.id === sale?.customerId
-    );
-    console.log('TODAY:', today);
-    console.log('SOLD PHONES:', soldPhones);
-    console.log('COUNT:', soldPhones.length);
+  ).values()
 
-    return {
-      brand: phone?.brand || '',
-      model: phone?.model || '',
-      imei1: phone?.imei1 || '',
-      imei2: phone?.imei2 || '',
-      customerName:
-        customer?.fullName ||
-        m.customerName ||
-        '-',
+).map(m => {
 
-      customerMobile:
-        customer?.mobile || '-',
+  const phone = phones.find(
+    p => p.id === m.productId
+  );
 
-      saleDate:
-        new Date(m.changedAt)
-          .toLocaleDateString('en-GB')
-    };
-  });
+  const sale = emiSales.find(
+    s => s.phoneId === m.productId
+  );
+
+  const customer = customers.find(
+    c => c.id === sale?.customerId
+  );
+
+  return {
+    brand: phone?.brand || '',
+    model: phone?.model || '',
+    imei1: phone?.imei1 || '',
+    imei2: phone?.imei2 || '',
+
+    customerName:
+      customer?.fullName ||
+      m.customerName ||
+      '-',
+
+    customerMobile:
+      customer?.mobile || '-',
+
+    saleDate:
+      new Date(m.changedAt)
+        .toLocaleDateString('en-GB')
+  };
+});
 
   let reportHtml = `
   <html>
