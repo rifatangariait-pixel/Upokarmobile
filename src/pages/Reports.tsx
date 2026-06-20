@@ -131,11 +131,24 @@ export function Reports() {
 
   const today = new Date().toLocaleDateString('en-GB');
 
-  const sold = stockMovements.filter(
-    m =>
-      m.newStatus === 'Sold' &&
-      new Date(m.changedAt).toLocaleDateString('en-GB') === today
-  );
+  const sold = emiSales.filter(
+  s =>
+    new Date(s.saleDate).toLocaleDateString('en-GB') === today
+);
+const soldPhones = todaySales.map(sale => {
+  const phone = phones.find(p => p.id === sale.phoneId);
+  const customer = customers.find(c => c.id === sale.customerId);
+
+  return {
+    brand: phone?.brand || '',
+    model: phone?.model || '',
+    imei1: phone?.imei1 || '',
+    imei2: phone?.imei2 || '',
+    customerName: customer?.fullName || '',
+    customerMobile: customer?.mobile || '',
+    saleDate: new Date(sale.saleDate).toLocaleDateString('en-GB')
+  };
+});
 
   const reserved = stockMovements.filter(
     m =>
