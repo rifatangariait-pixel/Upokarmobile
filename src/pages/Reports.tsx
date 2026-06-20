@@ -118,9 +118,9 @@ export function Reports() {
   };
 
   const handleExportPdf = () => {
-  try {
+    alert('PDF Clicked');
+  console.log('PDF Clicked');
     const data = getReportData();
-
     if (data.length === 0) {
       toast.error('No data found for this report.');
       return;
@@ -528,7 +528,7 @@ w.document.close();
               <Button onClick={handleExportExcel} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                 <Download className="w-4 h-4" /> Export Excel
               </Button>
-              <Button onClick={() => alert('Test')} className="gap-2" variant="outline">
+              <Button oonClick={() => alert('Test')} className="gap-2" variant="outline">
                 <FileText className="w-4 h-4" /> Export PDF (Print)
               </Button>
             </div>
