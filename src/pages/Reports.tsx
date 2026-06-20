@@ -128,20 +128,32 @@ export function Reports() {
     
     if (selectedReport === 'Daily Operations') {
 
-  const sold = stockMovements.filter(
-  m => m.newStatus === 'Sold'
+ const sold = stockMovements.filter(
+  m =>
+    m.newStatus === 'Sold' &&
+    new Date(m.changedAt)
+      .toLocaleDateString('en-GB') === today
 );
 
 const reserved = stockMovements.filter(
-  m => m.newStatus === 'Reserved'
+  m =>
+    m.newStatus === 'Reserved' &&
+    new Date(m.changedAt)
+      .toLocaleDateString('en-GB') === today
 );
 
 const returned = stockMovements.filter(
-  m => m.newStatus === 'Returned'
+  m =>
+    m.newStatus === 'Returned' &&
+    new Date(m.changedAt)
+      .toLocaleDateString('en-GB') === today
 );
 
 const damaged = stockMovements.filter(
-  m => m.newStatus === 'Damaged'
+  m =>
+    m.newStatus === 'Damaged' &&
+    new Date(m.changedAt)
+      .toLocaleDateString('en-GB') === today
 );
 
   const available = phones.filter(
@@ -169,6 +181,9 @@ const soldPhones = stockMovements
     const customer = customers.find(
       c => c.id === sale?.customerId
     );
+    console.log('TODAY:', today);
+    console.log('SOLD PHONES:', soldPhones);
+    console.log('COUNT:', soldPhones.length);
 
     return {
       brand: phone?.brand || '',
