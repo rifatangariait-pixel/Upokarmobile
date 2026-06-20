@@ -527,9 +527,16 @@ w.document.close();
             <div className="flex gap-4">
               <Button onClick={handleExportExcel} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                 <Download className="w-4 h-4" /> Export Excel
-              </Button>
-              <Button oonClick={() => alert('Test')} className="gap-2" variant="outline">
-                <FileText className="w-4 h-4" /> Export PDF (Print)
+              <Button
+  onClick={() => {
+    alert('Test');
+    handleExportPdf();
+  }}
+  className="gap-2"
+  variant="outline"
+>
+  <FileText className="w-4 h-4" /> Export PDF (Print)
+</Button>
               </Button>
             </div>
           </div>
