@@ -137,12 +137,22 @@ export function Reports() {
   p => p.status === 'Available'
 );
 
-const soldPhones = phones
-  .filter(p => p.status === 'Sold')
-  .map(phone => {
+const today = new Date().toLocaleDateString('en-GB');
+
+const soldPhones = stockMovements
+  .filter(
+    m =>
+      m.newStatus === 'Sold' &&
+      new Date(m.changedAt).toLocaleDateString('en-GB') === today
+  )
+  .map(m => {
+
+    const phone = phones.find(
+      p => p.id === m.productId
+    );
 
     const sale = emiSales.find(
-      s => s.phoneId === phone.id
+      s => s.phoneId === m.productId
     );
 
     const customer = customers.find(
@@ -150,28 +160,24 @@ const soldPhones = phones
     );
 
     return {
-      brand: phone.brand,
-      model: phone.model,
-      imei1: phone.imei1,
-      imei2: phone.imei2,
-
+      brand: phone?.brand || '',
+      model: phone?.model || '',
+      imei1: phone?.imei1 || '',
+      imei2: phone?.imei2 || '',
       customerName:
         customer?.fullName ||
-        phone.soldToCustomerName ||
-        'Unknown',
+        m.customerName ||
+        '-',
 
       customerMobile:
         customer?.mobile || '-',
 
       saleDate:
-        sale?.saleDate
-          ? new Date(
-              sale.saleDate
-            ).toLocaleDateString('en-GB')
-          : '-'
+        new Date(m.changedAt)
+          .toLocaleDateString('en-GB')
     };
   });
-  
+
   let reportHtml = `
   <html>
   <head>
