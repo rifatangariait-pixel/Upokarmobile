@@ -133,8 +133,45 @@ export function Reports() {
   const returned = stockMovements.filter(m => m.newStatus === 'Returned');
   const damaged = stockMovements.filter(m => m.newStatus === 'Damaged');
 
-  const available = phones.filter(p => p.status === 'Available');
+  const available = phones.filter(
+  p => p.status === 'Available'
+);
 
+const soldPhones = phones
+  .filter(p => p.status === 'Sold')
+  .map(phone => {
+
+    const sale = emiSales.find(
+      s => s.phoneId === phone.id
+    );
+
+    const customer = customers.find(
+      c => c.id === sale?.customerId
+    );
+
+    return {
+      brand: phone.brand,
+      model: phone.model,
+      imei1: phone.imei1,
+      imei2: phone.imei2,
+
+      customerName:
+        customer?.fullName ||
+        phone.soldToCustomerName ||
+        'Unknown',
+
+      customerMobile:
+        customer?.mobile || '-',
+
+      saleDate:
+        sale?.saleDate
+          ? new Date(
+              sale.saleDate
+            ).toLocaleDateString('en-GB')
+          : '-'
+    };
+  });
+  
   let reportHtml = `
   <html>
   <head>
@@ -248,9 +285,6 @@ export function Reports() {
 
   </div>
 
-  <h2>বিক্রিত ফোনসমূহ</h2>
-
-  <table>
    <h2>বিক্রিত ফোনসমূহ</h2>
 
 <table>
