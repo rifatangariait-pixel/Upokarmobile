@@ -127,23 +127,14 @@ export function Reports() {
     const keys = Object.keys(data[0]);
     
     if (selectedReport === 'Daily Operations') {
-
- const sold = stockMovements.filter(
-  m =>
-    m.newStatus === 'Sold' &&
+      const today = new Date().toLocaleDateString('en-GB');
+      const sold = stockMovements.filter( m =>
+      m.newStatus === 'Sold' &&
     new Date(m.changedAt)
       .toLocaleDateString('en-GB') === today
 );
 
-const today = new Date().toLocaleDateString('en-GB');
-const reserved = stockMovements.filter(
-  m =>
-    m.newStatus === 'Reserved' &&
-    new Date(m.changedAt)
-      .toLocaleDateString('en-GB') === today
-);
-
-const returned = stockMovements.filter(
+    const returned = stockMovements.filter(
   m =>
     m.newStatus === 'Returned' &&
     new Date(m.changedAt)
@@ -161,22 +152,7 @@ const damaged = stockMovements.filter(
   p => p.status === 'Available'
 );
 
-const soldPhones = Array.from(
-
-  new Map(
-
-    stockMovements
-      .filter(
-        m =>
-          m.newStatus === 'Sold' &&
-          new Date(m.changedAt)
-            .toLocaleDateString('en-GB') === today
-      )
-      .map(m => [m.productId, m])
-
-  ).values()
-
-).map(m => {
+const soldPhones = sold.map(m => {
 
   const phone = phones.find(
     p => p.id === m.productId
@@ -195,21 +171,13 @@ const soldPhones = Array.from(
     model: phone?.model || '',
     imei1: phone?.imei1 || '',
     imei2: phone?.imei2 || '',
-
-    customerName:
-      customer?.fullName ||
-      m.customerName ||
-      '-',
-
-    customerMobile:
-      customer?.mobile || '-',
-
-    saleDate:
-      new Date(m.changedAt)
-        .toLocaleDateString('en-GB')
+    customerName: customer?.fullName || m.customerName || '-',
+    customerMobile: customer?.mobile || '-',
+    saleDate: new Date(m.changedAt)
+      .toLocaleDateString('en-GB')
   };
-});
 
+});
   let reportHtml = `
   <html>
   <head>
@@ -407,14 +375,22 @@ return `
 <th>IMEI-2</th>
 </tr>
 
-${damaged.map(phone => `
+${damaged.map(item => {
+
+const phone = phones.find(
+  p => p.id === item.productId
+);
+
+return `
 <tr>
-<td>${phone.brand}</td>
-<td>${phone.model}</td>
-<td>${phone.imei1}</td>
-<td>${phone.imei2 || '-'}</td>
+<td>${phone?.brand || ''}</td>
+<td>${phone?.model || ''}</td>
+<td>${phone?.imei1 || ''}</td>
+<td>${phone?.imei2 || '-'}</td>
 </tr>
-`).join('')}
+`;
+
+}).join('')}
 
 </table>
 
