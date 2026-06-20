@@ -304,12 +304,12 @@ const soldPhones = Array.from(
 
     <div class="card">
       <h3>${reserved.length}</h3>
-      <p>বিক্রিত</p>
+      <p>রিজার্ভ</p>
     </div>
 
     <div class="card">
       <h3>${sold.length}</h3>
-      <p> রিজার্ভ</p>
+      <p>বিক্রিত</p>
     </div>
 
     <div class="card">
