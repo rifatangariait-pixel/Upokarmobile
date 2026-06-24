@@ -170,8 +170,6 @@ export function PublicPhones() {
     </div>
   </CardContent>
 </Card>
-```
-
 ))}
 
 </div>
