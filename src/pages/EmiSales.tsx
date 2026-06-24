@@ -11,6 +11,7 @@ import { EMISale, StockType, Phone } from '../types';
 import { useReactToPrint } from 'react-to-print';
 import { jsPDF } from 'jspdf';
 import { getBusinessIds, generateNextEmiIds } from '../utils/businessIds';
+import { hasPermission } from '../utils/permissions';
 
 const getPhoneSellingPrice = (phone: Phone | undefined): number => {
   if (!phone) return 0;
@@ -27,9 +28,13 @@ export function EmiSales({ stockType }: { stockType: StockType }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'SalesOfficer') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied.</div>;
-  }
+  if (!hasPermission(currentUser, 'Sales')) {
+  return (
+    <div className="text-center text-muted-foreground">
+      Access Denied
+    </div>
+  );
+}
   
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<EMISale | null>(null);
