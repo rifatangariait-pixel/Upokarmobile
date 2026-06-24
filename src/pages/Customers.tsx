@@ -7,6 +7,7 @@ import { Plus, Search, UserCheck, AlertCircle, Edit, Trash } from 'lucide-react'
 import { Customer } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { toast } from 'sonner';
+import { hasPermission } from '../utils/permissions';
 
 export function Customers() {
   const { customers, addCustomer, updateCustomer, deleteCustomer, isLoading, currentUser } = useStore();
@@ -16,9 +17,13 @@ export function Customers() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'SalesOfficer') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied.</div>;
-  }
+  if (!hasPermission(currentUser, 'Customer Management')) {
+  return (
+    <div className="text-center text-muted-foreground">
+      Access Denied
+    </div>
+  );
+}
 
   const canDelete = currentUser?.role === 'Admin';
 

@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { Modal } from '../components/ui/Modal';
 import { toast } from 'sonner';
 import { Collection as CollectionType, EMISale } from '../types';
-
+import { hasPermission } from '../utils/permissions';
 import { getBusinessIds, getCollectionReceiptId } from '../utils/businessIds';
 
 export function Collection() {
@@ -22,9 +22,13 @@ export function Collection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSale, setSelectedSale] = useState<EMISale | null>(null);
 
-  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'SalesOfficer') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied.</div>;
-  }
+  if (!hasPermission(currentUser, 'Payments')) {
+  return (
+    <div className="text-center text-muted-foreground">
+      Access Denied
+    </div>
+  );
+}
 
   const [formData, setFormData] = useState<Partial<CollectionType>>({
     amountPaid: 0, 
