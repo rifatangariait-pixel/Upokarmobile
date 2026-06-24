@@ -211,11 +211,9 @@ export function PublicPhones() {
 </Card>
 ```
 
-))}
-
-</div>
-
-            </div><Modal isOpen={!!selectedPhone} onClose={() => setSelectedPhone(null)} title="Reserve Phone">
+))
+        </div>
+            <Modal isOpen={!!selectedPhone} onClose={() => setSelectedPhone(null)} title="Reserve Phone">
                 {selectedPhone && (
                   <form className="space-y-4" onSubmit={handleReserve}>
                     <div className="bg-muted/50 p-4 rounded-lg mb-4">
@@ -244,7 +242,7 @@ export function PublicPhones() {
                     </div>
                   </form>
                 )}
-              </Modal></>
+              </Modal>
     </div>
   );
 }
