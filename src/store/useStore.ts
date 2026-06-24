@@ -22,9 +22,9 @@ interface AppState {
   reservations: ReservationRequest[];
   auditLogs: AuditLog[];
   
-  addUser: (user: User) => void;
-  updateUser: (id: string, user: Partial<User>) => void;
-  deleteUser: (id: string) => void;
+  addUser: (user: User) => Promise<void>;
+  updateUser: (id: string, user: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   
   // App Sync State
   isLoading: boolean;
@@ -87,25 +87,62 @@ export const useStore = create<AppState>()(
         }));
       },
 
-      addUser: (user) => set((state) => ({ users: [...state.users, user] })),
-      updateUser: (id, updates) => set((state) => ({
-        users: state.users.map(u => u.id === id ? { ...u, ...updates } : u)
-      })),
-      deleteUser: (id) => set((state) => ({
-        users: state.users.filter(u => u.id !== id)
-      })),
+      addUser: async (user) => {
+        set((state) => ({ users: [...state.users, user] }));
+        try {
+          await GoogleSheetsService.create('Users', {
+            ...user,
+            custom_permissions: user.custom_permissions ? JSON.stringify(user.custom_permissions) : '[]'
+          });
+        } catch (error: any) {
+          set((state) => ({ users: state.users.filter(u => u.id !== user.id) }));
+          alert("Error adding user: " + error.message);
+          throw error;
+        }
+      },
+      updateUser: async (id, updates) => {
+        const previousUsers = get().users;
+        set((state) => ({
+          users: state.users.map(u => u.id === id ? { ...u, ...updates } : u)
+        }));
+        try {
+          const payload = { ...updates };
+          if (updates.custom_permissions) {
+            payload.custom_permissions = JSON.stringify(updates.custom_permissions) as any;
+          }
+          await GoogleSheetsService.update('Users', id, payload);
+        } catch (error: any) {
+          set({ users: previousUsers });
+          alert("Error updating user: " + error.message);
+          throw error;
+        }
+      },
+      deleteUser: async (id) => {
+        const previousUsers = get().users;
+        set((state) => ({
+          users: state.users.filter(u => u.id !== id)
+        }));
+        try {
+          await GoogleSheetsService.delete('Users', id);
+        } catch (error: any) {
+          set({ users: previousUsers });
+          alert("Error deleting user: " + error.message);
+          throw error;
+        }
+      },
 
       // Initializer to load remote configurations if GAS is connected
       initFromSheets: async () => {
         set({ isLoading: true });
         try {
-          const [phonesRes, customersRes, emiSalesRes, collectionsRes, smRes, resvRes] = await Promise.all([
+          const [phonesRes, customersRes, emiSalesRes, collectionsRes, smRes, resvRes, usersRes] = await Promise.all([
              GoogleSheetsService.getAll('Products'),
              GoogleSheetsService.getAll('Customers'),
              GoogleSheetsService.getAll('EMISales'),
              GoogleSheetsService.getAll('EMICollections'),
              GoogleSheetsService.getAll('StockMovement'),
-             GoogleSheetsService.getAll('ReservationRequests')
+             GoogleSheetsService.getAll('ReservationRequests'),
+             GoogleSheetsService.getAll('Users')
           ]);
           
           if (phonesRes && phonesRes.length > 0) {
@@ -120,6 +157,14 @@ export const useStore = create<AppState>()(
           if (collectionsRes && collectionsRes.length > 0) set({ collections: collectionsRes as Collection[] });
           if (smRes && smRes.length > 0) set({ stockMovements: smRes as StockMovement[] });
           if (resvRes && resvRes.length > 0) set({ reservations: resvRes as ReservationRequest[] });
+          if (usersRes && usersRes.length > 0) {
+            const parsedUsers = (usersRes as any[]).map(u => ({
+              ...u,
+              is_active: u.is_active === undefined ? true : u.is_active === 'true' || u.is_active === true,
+              custom_permissions: u.custom_permissions ? (typeof u.custom_permissions === 'string' ? JSON.parse(u.custom_permissions) : u.custom_permissions) : []
+            }));
+            set({ users: parsedUsers as User[] });
+          }
         } catch (err) {
           console.error("Failed to sync from Google Sheets.", err);
         } finally {
@@ -361,7 +406,7 @@ export const useStore = create<AppState>()(
     {
       name: 'angaria-erp-storage',
       partialize: (state) => Object.fromEntries(
-        Object.entries(state).filter(([key]) => !['currentUser', 'isLoading'].includes(key))
+        Object.entries(state).filter(([key]) => !['users', 'currentUser', 'isLoading'].includes(key))
       ),
     }
   )

@@ -57,7 +57,9 @@ export function Users() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.fullName || !formData.username) {
@@ -84,48 +86,64 @@ export function Users() {
       return;
     }
 
-    if (editingId) {
-      const updates: Partial<User> = {
-        fullName: formData.fullName,
-        username: formData.username,
-        role: formData.role as UserRole,
-        is_active: formData.is_active,
-        custom_permissions: formData.custom_permissions,
-        updated_at: new Date().toISOString()
-      };
-      if (formData.password) {
-        updates.password = formData.password;
-        updates.password_hash = formData.password; // Mocking hash
+    setIsSubmitting(true);
+    try {
+      if (editingId) {
+        const updates: Partial<User> = {
+          fullName: formData.fullName,
+          username: formData.username,
+          role: formData.role as UserRole,
+          is_active: formData.is_active,
+          custom_permissions: formData.custom_permissions,
+          updated_at: new Date().toISOString()
+        };
+        if (formData.password) {
+          updates.password = formData.password;
+          updates.password_hash = formData.password; // Mocking hash
+        }
+        console.log("Updating user in DB", updates);
+        await updateUser(editingId, updates);
+        console.log("User updated successfully");
+        toast.success('User updated.');
+      } else {
+        const newUser: User = {
+          id: crypto.randomUUID(),
+          fullName: formData.fullName,
+          username: formData.username,
+          password: formData.password,
+          password_hash: formData.password,
+          role: formData.role as UserRole,
+          is_active: formData.is_active,
+          custom_permissions: formData.custom_permissions,
+          created_at: new Date().toISOString(),
+          created_by: currentUser.id
+        };
+        console.log("Creating new user in DB", newUser);
+        await addUser(newUser);
+        console.log("User added successfully");
+        toast.success('User added.');
       }
-      updateUser(editingId, updates);
-      toast.success('User updated.');
-    } else {
-      const newUser: User = {
-        id: crypto.randomUUID(),
-        fullName: formData.fullName,
-        username: formData.username,
-        password: formData.password,
-        password_hash: formData.password,
-        role: formData.role as UserRole,
-        is_active: formData.is_active,
-        custom_permissions: formData.custom_permissions,
-        created_at: new Date().toISOString(),
-        created_by: currentUser.id
-      };
-      addUser(newUser);
-      toast.success('User added.');
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error("Error saving user:", err);
+      toast.error(err.message || 'An error occurred.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (id === currentUser.id) {
       toast.error("You cannot delete yourself.");
       return;
     }
     if (confirm(`Delete ${name}?`)) {
-      deleteUser(id);
-      toast.success('User deleted.');
+      try {
+        await deleteUser(id);
+        toast.success('User deleted.');
+      } catch (err: any) {
+        toast.error(err.message || 'An error occurred while deleting.');
+      }
     }
   };
 
@@ -281,8 +299,8 @@ export function Users() {
           )}
 
           <div className="pt-4 flex justify-end gap-2 border-t mt-6">
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit">Save User</Button>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save User'}</Button>
           </div>
         </form>
       </Modal>
