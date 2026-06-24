@@ -21,6 +21,7 @@ export function PublicPhones() {
   const { phones, addReservation } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc'>('price-asc');
+  const [budgetRange, setBudgetRange] = useState('all');
   const [selectedPhone, setSelectedPhone] = useState<any>(null);
   
   const [formData, setFormData] = useState({
@@ -33,10 +34,31 @@ export function PublicPhones() {
   const availablePhones = phones.filter(p => p.status === 'Available');
 
   const term = String(searchTerm || '').toLowerCase();
-  const filteredPhones = availablePhones.filter(p => 
-    String(p.brand || '').toLowerCase().includes(term) ||
-    String(p.model || '').toLowerCase().includes(term)
-  ).sort((a, b) => {
+  const filteredPhones = availablePhones
+  .filter(p => {
+    const matchesSearch =
+      String(p.brand || '').toLowerCase().includes(term) ||
+      String(p.model || '').toLowerCase().includes(term);
+
+    const price = getPhoneSellingPrice(p);
+
+    let matchesBudget = true;
+
+    if (budgetRange === '0-10000') {
+      matchesBudget = price <= 10000;
+    } else if (budgetRange === '10000-15000') {
+      matchesBudget = price > 10000 && price <= 15000;
+    } else if (budgetRange === '15000-20000') {
+      matchesBudget = price > 15000 && price <= 20000;
+    } else if (budgetRange === '20000-30000') {
+      matchesBudget = price > 20000 && price <= 30000;
+    } else if (budgetRange === '30000+') {
+      matchesBudget = price > 30000;
+    }
+
+    return matchesSearch && matchesBudget;
+  })
+  .sort((a, b) => {
     if (sortBy === 'price-asc') return getPhoneSellingPrice(a) - getPhoneSellingPrice(b);
     if (sortBy === 'price-desc') return getPhoneSellingPrice(b) - getPhoneSellingPrice(a);
     return 0;
@@ -80,25 +102,49 @@ export function PublicPhones() {
       </div>
       
       <div className="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input 
-              placeholder="Search by brand or model..." 
-              className="pl-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select 
-            className="h-10 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-          >
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-          </select>
-        </div>
+  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+
+```
+<div className="relative max-w-md w-full">
+  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+  <Input
+    placeholder="Search by brand or model..."
+    className="pl-9"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+</div>
+
+<div className="flex gap-3 flex-wrap w-full md:w-auto">
+  
+  <select
+    className="h-10 rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm"
+    value={budgetRange}
+    onChange={(e) => setBudgetRange(e.target.value)}
+  >
+    <option value="all">All Budget</option>
+    <option value="0-10000">৳0 - ৳10,000</option>
+    <option value="10000-15000">৳10,000 - ৳15,000</option>
+    <option value="15000-20000">৳15,000 - ৳20,000</option>
+    <option value="20000-30000">৳20,000 - ৳30,000</option>
+    <option value="30000+">৳30,000+</option>
+  </select>
+
+  <select
+    className="h-10 rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm"
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value as any)}
+  >
+    <option value="price-asc">Price: Low to High</option>
+    <option value="price-desc">Price: High to Low</option>
+  </select>
+
+</div>
+```
+
+  </div>
+</div>
+
 
         {filteredPhones.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground bg-white rounded-lg border">
