@@ -233,10 +233,8 @@ className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl 
   </CardContent>
 </Card>
 ))}
-
 </div>
-
-        )}
+)}
       </div>
 
       <Modal isOpen={!!selectedPhone} onClose={() => setSelectedPhone(null)} title="Reserve Phone">
