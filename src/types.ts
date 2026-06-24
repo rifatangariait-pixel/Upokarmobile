@@ -91,6 +91,7 @@ export interface Phone {
   batteryHealth?: string;
   remarks?: string;
   customerSellingPrice?: number;
+  imageUrl?: string;
 }
 
 export type RiskRating = 'Low Risk' | 'Medium Risk' | 'High Risk';

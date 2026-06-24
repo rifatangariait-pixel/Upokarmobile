@@ -26,7 +26,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
   const [formData, setFormData] = useState<Partial<Phone>>({
     brand: '', model: '', imei1: '', ram: '', storage: '', color: '',
     purchasePrice: 0, sellingPrice: 0, supplier: '', warranty: '1 Year', purchaseDate: new Date().toISOString().split('T')[0], status: 'Available',
-    stockType, conditionGrade: 'A', repairCost: 0, batteryHealth: '', remarks: ''
+    stockType, conditionGrade: 'A', repairCost: 0, batteryHealth: '', remarks: '', imageUrl: ''
   });
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -65,7 +65,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
       setFormData({
         brand: '', model: '', imei1: '', ram: '', storage: '', color: '',
         purchasePrice: 0, sellingPrice: 0, customerSellingPrice: 0, supplier: '', warranty: '1 Year', purchaseDate: new Date().toISOString().split('T')[0], status: 'Available',
-        stockType, conditionGrade: 'A', repairCost: 0, batteryHealth: '', remarks: ''
+        stockType, conditionGrade: 'A', repairCost: 0, batteryHealth: '', remarks: '', imageUrl: ''
       });
     }
     setIsModalOpen(true);
@@ -345,6 +345,30 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                     <label className="text-sm font-medium">Color</label>
                     <Input value={formData.color} onChange={e => setFormData({ ...formData, color: e.target.value })} placeholder="e.g. Black" />
                   </div>
+                  <div className="space-y-2">
+  <label className="text-sm font-medium">
+    Phone Image URL
+  </label>
+
+  <Input
+    value={formData.imageUrl || ''}
+    onChange={e =>
+      setFormData({
+        ...formData,
+        imageUrl: e.target.value
+      })
+    }
+    placeholder="https://example.com/phone.jpg"
+  />
+
+  {formData.imageUrl && (
+    <img
+      src={formData.imageUrl}
+      alt="Preview"
+      className="w-24 h-24 object-cover rounded border mt-2"
+    />
+  )}
+</div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Supplier</label>
                     <Input value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} />

@@ -108,11 +108,17 @@ export function PublicPhones() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredPhones.map((phone, idx) => (
               <Card key={`${phone.id}-${idx}`} className="overflow-hidden flex flex-col">
-                <div className="aspect-[4/3] bg-muted/30 flex items-center justify-center p-6 border-b">
-                  <div className="w-16 h-24 bg-primary/10 rounded-lg flex items-center justify-center">
-                     <span className="text-xs text-primary font-medium tracking-wider uppercase rotate-90">{phone.brand}</span>
-                  </div>
-                </div>
+                <div className="aspect-[4/3] overflow-hidden border-b bg-white">
+  <img
+    src={phone.imageUrl || '/placeholder-phone.png'}
+    alt={`${phone.brand} ${phone.model}`}
+    className="w-full h-full object-cover"
+    onError={(e) => {
+      e.currentTarget.src = '/placeholder-phone.png';
+    }}
+  />
+</div>
+
                 <CardContent className="p-4 flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-lg">{phone.brand} {phone.model}</h3>
