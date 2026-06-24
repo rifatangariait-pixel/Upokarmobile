@@ -106,39 +106,76 @@ export function PublicPhones() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPhones.map((phone, idx) => (
-              <Card key={`${phone.id}-${idx}`} className="overflow-hidden flex flex-col">
-                <div className="aspect-[4/3] overflow-hidden border-b bg-white">
-  <img
-    src={phone.imageUrl || '/placeholder-phone.png'}
-    alt={`${phone.brand} ${phone.model}`}
-    className="w-full h-full object-cover"
-    onError={(e) => {
-      e.currentTarget.src = '/placeholder-phone.png';
-    }}
-  />
+  {filteredPhones.map((phone, idx) => (
+    <Card
+      key={`${phone.id}-${idx}`}
+      className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
+    >
+      <div className="h-64 bg-slate-50 flex items-center justify-center border-b">
+        <img
+          src={phone.imageUrl || '/placeholder-phone.png'}
+          alt={`${phone.brand} ${phone.model}`}
+          className="max-w-full max-h-full object-contain p-4"
+          onError={(e) => {
+            e.currentTarget.src = '/placeholder-phone.png';
+          }}
+        />
+      </div>
+
+```
+  <CardContent className="p-4 flex-1 flex flex-col justify-between">
+    <div>
+      <h3 className="font-bold text-xl leading-tight text-slate-800">
+        {phone.brand} {phone.model}
+      </h3>
+
+      <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+        <div className="bg-slate-100 rounded-lg p-2">
+          <span className="text-slate-500">RAM</span>
+          <div className="font-semibold">{phone.ram}</div>
+        </div>
+
+        <div className="bg-slate-100 rounded-lg p-2">
+          <span className="text-slate-500">Storage</span>
+          <div className="font-semibold">{phone.storage}</div>
+        </div>
+
+        <div className="bg-slate-100 rounded-lg p-2 col-span-2">
+          <span className="text-slate-500">Color</span>
+          <div className="font-semibold">{phone.color}</div>
+        </div>
+      </div>
+    </div>
+
+    <div className="mt-5 pt-4 border-t">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <p className="text-xs text-slate-500">Price</p>
+          <div className="text-2xl font-bold text-primary">
+            ৳{getPhoneSellingPrice(phone).toLocaleString()}
+          </div>
+        </div>
+
+        <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+          Available
+        </span>
+      </div>
+
+      <Button
+        className="w-full h-11 font-semibold"
+        onClick={() => setSelectedPhone(phone)}
+      >
+        Reserve Phone
+      </Button>
+    </div>
+  </CardContent>
+</Card>
+```
+
+))}
+
 </div>
 
-                <CardContent className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg">{phone.brand} {phone.model}</h3>
-                    <div className="text-sm text-muted-foreground space-y-1 mt-2">
-                       <p>RAM: {phone.ram}</p>
-                       <p>Storage: {phone.storage}</p>
-                       <p>Color: {phone.color}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t space-y-4">
-                    <div className="flex justify-between items-center">
-                       <div className="text-lg font-bold text-primary">৳{getPhoneSellingPrice(phone).toLocaleString()}</div>
-                       <div className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">Available</div>
-                    </div>
-                    <Button className="w-full" onClick={() => setSelectedPhone(phone)}>Reserve Phone</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         )}
       </div>
 
