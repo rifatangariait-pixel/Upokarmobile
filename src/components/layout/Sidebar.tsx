@@ -27,7 +27,7 @@ export function Sidebar() {
     { name: 'এআই ইনসাইটস (AI)', path: '/ai-insights', icon: Sparkles, permission: 'AI Assistant' },
     { name: 'সেটিংস (Settings)', path: '/settings', icon: Settings, permission: 'Settings' },
   ];
-  
+
   console.log("Current User:", currentUser);
   console.log("Role:", currentUser?.role);
   console.log("Custom Permissions:", currentUser?.custom_permissions);
@@ -57,7 +57,7 @@ export function Sidebar() {
         ))}
       </div>
       <div className="p-4 border-t text-xs text-muted-foreground text-center">
-        Powered by AI Studio
+        Developed by IT Department, Upokar Mobile. All rights reserved.
       </div>
     </aside>
   );
