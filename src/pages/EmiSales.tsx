@@ -150,7 +150,7 @@ export function EmiSales({ stockType }: { stockType: StockType }) {
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন', 105, 33, { align: 'center' });
+      doc.text('Developed by IT Department, Upokar Mobile. ', 105, 33, { align: 'center' });
       
       // Receipt Title
       doc.setFont('helvetica', 'bold');
