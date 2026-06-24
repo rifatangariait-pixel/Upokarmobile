@@ -157,6 +157,14 @@ className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl 
 >
 
 ```
+{filteredPhones.map((phone, idx) => (
+<Card
+key={`${phone.id}-${idx}`}
+className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
+
+>
+
+```
 <div className="h-64 bg-slate-50 flex items-center justify-center border-b">
 ```
 
@@ -174,18 +182,6 @@ className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl 
 <CardContent className="p-4 flex-1 flex flex-col justify-between">
 ```
 
-      <div className="h-64 bg-slate-50 flex items-center justify-center border-b">
-        <img
-          src={phone.imageUrl || '/placeholder-phone.png'}
-          alt={`${phone.brand} ${phone.model}`}
-          className="max-w-full max-h-full object-contain p-4"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder-phone.png';
-          }}
-        />
-      </div>
-
-  <CardContent className="p-4 flex-1 flex flex-col justify-between">
     <div>
       <h3 className="font-bold text-xl leading-tight text-slate-800">
         {phone.brand} {phone.model}
