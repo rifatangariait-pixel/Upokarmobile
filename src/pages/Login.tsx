@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 export function Login() {
   const { login, currentUser } = useStore();
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,15 +20,18 @@ export function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    login(username);
+    const success = login(username, password);
+    if (!success) {
+      toast.error('Invalid username or password');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold uppercase tracking-wider">Angaria ERP</CardTitle>
-          <p className="text-sm text-muted-foreground">Staff Login Panel</p>
+          <CardTitle className="text-3xl font-bold tracking-wider text-primary">উপকার</CardTitle>
+          <p className="text-sm font-medium text-muted-foreground">আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</p>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleLogin}>
@@ -40,12 +44,17 @@ export function Login() {
                  onChange={(e) => setUsername(e.target.value)} 
                />
             </div>
-            <Button type="submit" className="w-full">Sign In</Button>
-            
-            <div className="pt-4 text-xs text-muted-foreground text-center space-y-1">
-              <p>Demo credentials:</p>
-              <p>admin / sales / inventory</p>
+            <div className="space-y-2">
+               <label className="text-sm font-medium">Password</label>
+               <Input 
+                 type="password"
+                 placeholder="Enter your password" 
+                 required 
+                 value={password} 
+                 onChange={(e) => setPassword(e.target.value)} 
+               />
             </div>
+            <Button type="submit" className="w-full">Sign In</Button>
           </form>
           
           <div className="mt-6 pt-6 border-t text-center">

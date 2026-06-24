@@ -12,8 +12,9 @@ import { Collection as CollectionType, EMISale } from '../types';
 import { getBusinessIds, getCollectionReceiptId } from '../utils/businessIds';
 
 export function Collection() {
-  const { emiSales, customers, collections, addCollection, isLoading, currentUser } = useStore();
+  const { emiSales, customers, collections, phones, addCollection, isLoading, currentUser } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [stockTypeFilter, setStockTypeFilter] = useState<'ALL' | 'NEW' | 'USED'>('ALL');
   
   const businessIds = React.useMemo(() => getBusinessIds(emiSales), [emiSales]);
   
@@ -36,9 +37,13 @@ export function Collection() {
   const activeSales = emiSales
     .filter(s => s.status === 'Active')
     .filter(s => {
+      const ph = phones.find(p => p.id === s.phoneId);
+      if (stockTypeFilter !== 'ALL' && (ph?.stockType || 'NEW') !== stockTypeFilter) return false;
+
       const cust = customers.find(c => c.id === s.customerId);
       const bId = businessIds.get(s.id);
-      return s.id.includes(searchTerm) || bId?.saleId.toLowerCase().includes(searchTerm.toLowerCase()) || (cust && cust.fullName.toLowerCase().includes(searchTerm.toLowerCase()));
+      const term = String(searchTerm || '').toLowerCase();
+      return String(s.id || '').includes(searchTerm) || String(bId?.saleId || '').toLowerCase().includes(term) || String(cust?.fullName || '').toLowerCase().includes(term);
     })
     .sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime());
 
@@ -89,7 +94,7 @@ export function Collection() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Receipt - Angaria ERP</title>
+            <title>Receipt - উপকার</title>
             <style>
               body { font-family: sans-serif; padding: 40px; margin: 0 auto; max-width: 600px; }
               .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px; }
@@ -103,9 +108,8 @@ export function Collection() {
           </head>
           <body>
             <div class="header" style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 20px;">
-              <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">Angaria Small Business Co-Society</h1>
-              <h3 style="margin: 5px 0; font-size: 16px; color: #444;">Mobile EMI & Inventory System</h3>
-              <p style="margin: 5px 0; font-size: 14px; color: #666;">Address: Angaria, Shariatpur</p>
+              <h1 style="margin: 0; font-size: 28px; color: #2563eb;">উপকার</h1>
+              <p style="margin: 5px 0; font-size: 14px; color: #444; font-weight: 500;">আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</p>
               <h2 style="margin: 15px 0 0 0; font-size: 18px; text-transform: uppercase; border: 1px solid #ccc; display: inline-block; padding: 5px 15px; background: #f9f9f9;">Payment Receipt</h2>
             </div>
             <div class="details">
@@ -155,11 +159,22 @@ export function Collection() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="col-span-2">
           <CardHeader className="py-4 border-b">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <CardTitle>Upcoming & Overdue Deliverables</CardTitle>
-              <div className="relative w-[200px]">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search Sale/Customer..." className="pl-8 h-9 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <div className="flex gap-2 w-full sm:w-auto">
+                <select 
+                  className="h-9 px-3 rounded-md border border-input bg-transparent text-sm w-[120px]"
+                  value={stockTypeFilter}
+                  onChange={(e) => setStockTypeFilter(e.target.value as any)}
+                >
+                  <option value="ALL">All Phones</option>
+                  <option value="NEW">New Phones</option>
+                  <option value="USED">Diamond Phones</option>
+                </select>
+                <div className="relative flex-1 sm:w-[200px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search Sale/Customer..." className="pl-8 h-9 text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -173,6 +188,7 @@ export function Collection() {
                 const customer = customers.find(c => c.id === sale.customerId);
                 const dueDate = new Date(sale.nextDueDate);
                 const isOverdue = dueDate < new Date();
+                const phone = phones.find(p => p.id === sale.phoneId);
 
                 return (
                   <div key={`${sale.id}-${idx}`} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
@@ -181,7 +197,18 @@ export function Collection() {
                         {isOverdue ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-foreground">{customer?.fullName} <span className="text-muted-foreground text-xs font-normal">({businessIds.get(sale.id)?.saleId || sale.id})</span></h4>
+                        <h4 className="font-semibold text-foreground flex items-center gap-2">
+                          {customer?.fullName} 
+                          <span className="text-muted-foreground text-xs font-normal">({businessIds.get(sale.id)?.saleId || sale.id})</span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border
+                            ${(phone?.stockType || 'NEW') === 'NEW' 
+                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300' 
+                              : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300'
+                            }`}
+                          >
+                            {(phone?.stockType || 'NEW') === 'NEW' ? 'NEW' : 'DIAMOND'}
+                          </span>
+                        </h4>
                         <div className="text-sm text-muted-foreground">Due: {format(dueDate, 'dd/MM/yyyy')} • ৳{sale.monthlyInstallment.toLocaleString()}</div>
                         {isOverdue && <div className="text-xs text-destructive font-medium mt-1">Overdue by {Math.floor((new Date().getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))} days</div>}
                       </div>

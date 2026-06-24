@@ -12,8 +12,13 @@ import { PublicPhones } from './pages/PublicPhones';
 import { Login } from './pages/Login';
 import { Reservations } from './pages/Reservations';
 import { Users } from './pages/Users';
+import { DailyReport } from './pages/DailyReport';
+import { AiInsights } from './pages/AiInsights';
+import { DiamondSecretReport } from './pages/DiamondSecretReport';
 import { useStore } from './store/useStore';
 import { Toaster } from 'sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
   const { initFromSheets, currentUser } = useStore();
@@ -31,19 +36,81 @@ export default function App() {
         
         <Route path="/" element={<Layout />}>
           <Route index element={
-            currentUser?.role === 'InventoryManager' ? <Navigate to="/inventory" /> : 
-            currentUser?.role === 'SalesOfficer' ? <Navigate to="/sales" /> : 
-            <Dashboard />
+            <ProtectedRoute permission="Dashboard">
+              <Dashboard />
+            </ProtectedRoute>
           } />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="sales" element={<EmiSales />} />
-          <Route path="collection" element={<Collection />} />
-          <Route path="reservations" element={<Reservations />} />
-          <Route path="users" element={<Users />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="ai-insights" element={<div className="p-4 flex flex-col items-center justify-center h-full text-center"><div className="text-4xl mb-4">✨</div><h2 className="text-xl font-bold">AI Business Forecaster</h2><p className="text-muted-foreground mt-2 max-w-md">Gemini AI is analyzing your sales velocity and predicting next month's EMI default risks. Feature pending API connection.</p></div>} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="inventory" element={<Navigate to="/inventory/new" replace />} />
+          <Route path="inventory/new" element={
+            <ProtectedRoute permission="New Phone Stock">
+              <ErrorBoundary><Inventory stockType="NEW" /></ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="inventory/used" element={
+            <ProtectedRoute permission="Diamond Phone Stock">
+              <ErrorBoundary><Inventory stockType="USED" /></ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="customers" element={
+            <ProtectedRoute permission="Customer Management">
+              <Customers />
+            </ProtectedRoute>
+          } />
+          <Route path="sales" element={<Navigate to="/sales/new" replace />} />
+          <Route path="sales/new" element={
+            <ProtectedRoute permission="Sales">
+              <EmiSales stockType="NEW" />
+            </ProtectedRoute>
+          } />
+          <Route path="sales/used" element={
+            <ProtectedRoute permission="Sales">
+              <EmiSales stockType="USED" />
+            </ProtectedRoute>
+          } />
+          <Route path="collection" element={
+            <ProtectedRoute permission="Payments">
+              <Collection />
+            </ProtectedRoute>
+          } />
+          <Route path="reservations" element={
+            <ProtectedRoute permission="Reservations">
+              <Reservations />
+            </ProtectedRoute>
+          } />
+          <Route path="users" element={
+            <ProtectedRoute permission="User Management">
+              <Users />
+            </ProtectedRoute>
+          } />
+          <Route path="daily-report" element={
+            <ProtectedRoute permission="Daily Report">
+              <DailyReport />
+            </ProtectedRoute>
+          } />
+          <Route path="reports/:type" element={
+            // Note: Different report types could have different permissions, 
+            // but we'll apply a generic wrapper here and let the page handle specifics if needed,
+            // or just use a generic 'Reports' permission if available. 
+            // The prompt says "New Phone Report", "Diamond Phone Report", "Combined Report".
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          } />
+          <Route path="diamond-secret-report" element={
+            <ProtectedRoute permission="Diamond Secret Report">
+              <DiamondSecretReport />
+            </ProtectedRoute>
+          } />
+          <Route path="ai-insights" element={
+            <ProtectedRoute permission="AI Assistant">
+              <AiInsights />
+            </ProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <ProtectedRoute permission="Settings">
+              <Settings />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<div className="p-4">Not Found</div>} />
         </Route>
       </Routes>

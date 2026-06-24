@@ -5,8 +5,17 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Search } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
-import { ReservationRequest } from '../types';
+import { ReservationRequest, Phone } from '../types';
 import { toast } from 'sonner';
+
+const getPhoneSellingPrice = (phone: Phone | undefined): number => {
+  if (!phone) return 0;
+  if (phone.stockType === 'USED' || phone.stockType === 'DIAMOND') {
+    return phone.customerSellingPrice || 0;
+  }
+  return phone.sellingPrice || 0;
+};
+
 
 export function PublicPhones() {
   const { phones, addReservation } = useStore();
@@ -23,12 +32,13 @@ export function PublicPhones() {
 
   const availablePhones = phones.filter(p => p.status === 'Available');
 
+  const term = String(searchTerm || '').toLowerCase();
   const filteredPhones = availablePhones.filter(p => 
-    p.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.model.toLowerCase().includes(searchTerm.toLowerCase())
+    String(p.brand || '').toLowerCase().includes(term) ||
+    String(p.model || '').toLowerCase().includes(term)
   ).sort((a, b) => {
-    if (sortBy === 'price-asc') return a.sellingPrice - b.sellingPrice;
-    if (sortBy === 'price-desc') return b.sellingPrice - a.sellingPrice;
+    if (sortBy === 'price-asc') return getPhoneSellingPrice(a) - getPhoneSellingPrice(b);
+    if (sortBy === 'price-desc') return getPhoneSellingPrice(b) - getPhoneSellingPrice(a);
     return 0;
   });
 
@@ -61,8 +71,11 @@ export function PublicPhones() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center">
-      <div className="w-full bg-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-10 px-6 max-w-7xl mx-auto">
-        <h1 className="text-xl font-bold">Angaria Phones</h1>
+      <div className="w-full bg-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-10 px-6 max-w-7xl mx-auto border-b">
+        <div>
+          <h1 className="text-2xl font-bold text-primary tracking-wider">উপকার</h1>
+          <p className="text-[10px] text-muted-foreground leading-tight sm:text-xs">আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</p>
+        </div>
         <Button variant="outline" onClick={() => window.location.href = '/'}>Staff Login</Button>
       </div>
       
@@ -111,7 +124,7 @@ export function PublicPhones() {
                   </div>
                   <div className="mt-4 pt-4 border-t space-y-4">
                     <div className="flex justify-between items-center">
-                       <div className="text-lg font-bold text-primary">৳{phone.sellingPrice.toLocaleString()}</div>
+                       <div className="text-lg font-bold text-primary">৳{getPhoneSellingPrice(phone).toLocaleString()}</div>
                        <div className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">Available</div>
                     </div>
                     <Button className="w-full" onClick={() => setSelectedPhone(phone)}>Reserve Phone</Button>
@@ -128,7 +141,7 @@ export function PublicPhones() {
           <form className="space-y-4" onSubmit={handleReserve}>
             <div className="bg-muted/50 p-4 rounded-lg mb-4">
               <h4 className="font-medium">{selectedPhone.brand} {selectedPhone.model}</h4>
-              <p className="text-sm text-muted-foreground">Price: ৳{selectedPhone.sellingPrice.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Price: ৳{getPhoneSellingPrice(selectedPhone).toLocaleString()}</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Your Name</label>

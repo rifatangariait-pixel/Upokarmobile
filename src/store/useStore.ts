@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware';
 import { Phone, Customer, EMISale, Collection, StockMovement, PhoneStatus, User, ReservationRequest, ReservationStatus } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
+export interface AuditLog {
+  id: string;
+  userName: string;
+  role: string;
+  action: string;
+  timestamp: string;
+}
+
 interface AppState {
   phones: Phone[];
   customers: Customer[];
@@ -12,15 +20,23 @@ interface AppState {
   users: User[];
   currentUser: User | null;
   reservations: ReservationRequest[];
+  auditLogs: AuditLog[];
+  
+  addUser: (user: User) => void;
+  updateUser: (id: string, user: Partial<User>) => void;
+  deleteUser: (id: string) => void;
   
   // App Sync State
   isLoading: boolean;
   initFromSheets: () => Promise<void>;
   
   // Auth
-  login: (username: string) => void;
+  login: (username: string, password?: string) => boolean;
   logout: () => void;
   
+  // Audit
+  addAuditLog: (action: string) => void;
+
   // Reservations
   addReservation: (reservation: ReservationRequest) => Promise<void>;
   updateReservationStatus: (id: string, newStatus: ReservationStatus) => Promise<void>;
@@ -48,13 +64,36 @@ export const useStore = create<AppState>()(
       collections: [],
       stockMovements: [],
       users: [
-        { id: '1', username: 'admin', role: 'Admin', fullName: 'System Admin' },
-        { id: '2', username: 'sales', role: 'SalesOfficer', fullName: 'Sales Officer' },
-        { id: '3', username: 'inventory', role: 'InventoryManager', fullName: 'Inventory Manager' },
+        { id: '1', username: 'Admin', password: '1030', role: 'Admin', fullName: 'System Admin' },
+        { id: '2', username: 'sales', password: 'password', role: 'SalesOfficer', fullName: 'Sales Officer' },
+        { id: '3', username: 'inventory', password: 'password', role: 'InventoryManager', fullName: 'Inventory Manager' },
       ],
       currentUser: null,
       reservations: [],
+      auditLogs: [],
       isLoading: false,
+
+      addAuditLog: (action: string) => {
+        const user = get().currentUser;
+        if (!user) return;
+        set(state => ({
+          auditLogs: [...(state.auditLogs || []), {
+            id: crypto.randomUUID(),
+            userName: user.fullName || user.username,
+            role: user.role,
+            timestamp: new Date().toISOString(),
+            action
+          }]
+        }));
+      },
+
+      addUser: (user) => set((state) => ({ users: [...state.users, user] })),
+      updateUser: (id, updates) => set((state) => ({
+        users: state.users.map(u => u.id === id ? { ...u, ...updates } : u)
+      })),
+      deleteUser: (id) => set((state) => ({
+        users: state.users.filter(u => u.id !== id)
+      })),
 
       // Initializer to load remote configurations if GAS is connected
       initFromSheets: async () => {
@@ -69,7 +108,13 @@ export const useStore = create<AppState>()(
              GoogleSheetsService.getAll('ReservationRequests')
           ]);
           
-          if (phonesRes && phonesRes.length > 0) set({ phones: phonesRes as Phone[] });
+          if (phonesRes && phonesRes.length > 0) {
+            const mappedPhones = (phonesRes as Phone[]).map(p => ({
+              ...p,
+              stockType: p.stockType || 'NEW'
+            }));
+            set({ phones: mappedPhones });
+          }
           if (customersRes && customersRes.length > 0) set({ customers: customersRes as Customer[] });
           if (emiSalesRes && emiSalesRes.length > 0) set({ emiSales: emiSalesRes as EMISale[] });
           if (collectionsRes && collectionsRes.length > 0) set({ collections: collectionsRes as Collection[] });
@@ -82,11 +127,15 @@ export const useStore = create<AppState>()(
         }
       },
 
-      login: (username) => {
-        const user = get().users.find(u => u.username === username);
+      login: (username, password) => {
+        const user = get().users.find(u => u.username === username && (u.password === password || u.password_hash === password) && (u.is_active !== false));
         if (user) {
-          set({ currentUser: user });
+          const updatedUser = { ...user, last_login: new Date().toISOString() };
+          get().updateUser(user.id, { last_login: updatedUser.last_login });
+          set({ currentUser: updatedUser });
+          return true;
         }
+        return false;
       },
 
       logout: () => {
@@ -310,7 +359,10 @@ export const useStore = create<AppState>()(
       }
     }),
     {
-      name: 'angaria-erp-storage'
+      name: 'angaria-erp-storage',
+      partialize: (state) => Object.fromEntries(
+        Object.entries(state).filter(([key]) => !['currentUser', 'isLoading'].includes(key))
+      ),
     }
   )
 );

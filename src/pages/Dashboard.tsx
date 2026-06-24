@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { useStore } from '../store/useStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Smartphone, Users, CreditCard, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Smartphone, Users, CreditCard, TrendingUp, AlertTriangle, Gem } from 'lucide-react';
 import { useState } from 'react';
 import { Modal } from '../components/ui/Modal';
 
@@ -15,6 +15,39 @@ export function Dashboard() {
   if (currentUser?.role !== 'Admin') {
     return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
   }
+  
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  const getDailyStats = (type: 'NEW' | 'USED') => {
+    const typePhones = phones.filter(p => (p.stockType || 'NEW') === type);
+    const totalStock = typePhones.filter(p => p.status === 'Available').length;
+    
+    const soldToday = emiSales.filter(s => {
+      const p = phones.find(ph => ph.id === s.phoneId);
+      return s.saleDate.startsWith(todayStr) && (p?.stockType || 'NEW') === type;
+    });
+    
+    const collectionsToday = collections.filter(c => {
+      const s = emiSales.find(sale => sale.id === c.emiSaleId);
+      const p = phones.find(ph => ph.id === s?.phoneId);
+      return c.paymentDate.startsWith(todayStr) && (p?.stockType || 'NEW') === type;
+    });
+    
+    const collectionAmount = collectionsToday.reduce((acc, c) => acc + Number(c.amountPaid), 0);
+    
+    const profitToday = soldToday.reduce((acc, s) => {
+      const p = phones.find(ph => ph.id === s.phoneId);
+      if (!p) return acc;
+      let profit = p.sellingPrice - p.purchasePrice;
+      if (type === 'USED' && p.repairCost) profit -= p.repairCost;
+      return acc + profit;
+    }, 0);
+
+    return { totalStock, soldToday: soldToday.length, collectionAmount, profitToday };
+  };
+
+  const newPhoneStats = getDailyStats('NEW');
+  const usedPhoneStats = getDailyStats('USED');
 
   const totalStockValue = phones.filter(p => ['Available', 'Reserved'].includes(p.status)).reduce((acc, p) => acc + p.sellingPrice, 0);
   const availablePhones = phones.filter(p => p.status === 'Available').length;
@@ -97,7 +130,57 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold tracking-tight">ড্যাশবোর্ড (Overview)</h2>
-        <p className="text-muted-foreground w-full">Angaria Small Business Co-Society ERP System Overview.</p>
+        <p className="text-muted-foreground w-full">আঙ্গারিয়া ক্ষুদ্র ব্যবসায়ী সমবায় সমিতির অঙ্গসংগঠন</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 mb-4">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="py-3 bg-slate-50/50">
+             <CardTitle className="text-md text-blue-700">NEW PHONE SUMMARY (TODAY)</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
+             <div>
+                <p className="text-xs text-muted-foreground">Total Stock (Available)</p>
+                <div className="text-xl font-bold">{newPhoneStats.totalStock}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Sold Today</p>
+                <div className="text-xl font-bold">{newPhoneStats.soldToday}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Collection Today</p>
+                <div className="text-xl font-bold text-emerald-600">৳{newPhoneStats.collectionAmount.toLocaleString()}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Profit Today</p>
+                <div className={`text-xl font-bold ${newPhoneStats.profitToday >= 0 ? 'text-blue-600' : 'text-red-600'}`}>৳{newPhoneStats.profitToday.toLocaleString()}</div>
+             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader className="py-3 bg-purple-50/50">
+             <CardTitle className="text-md text-purple-700 flex items-center gap-2"><Gem className="w-4 h-4" /> DIAMOND PHONE</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
+             <div>
+                <p className="text-xs text-muted-foreground">Total Stock (Available)</p>
+                <div className="text-xl font-bold">{usedPhoneStats.totalStock}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Sold Today</p>
+                <div className="text-xl font-bold">{usedPhoneStats.soldToday}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Collection Today</p>
+                <div className="text-xl font-bold text-emerald-600">৳{usedPhoneStats.collectionAmount.toLocaleString()}</div>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground">Profit Today</p>
+                <div className={`text-xl font-bold ${usedPhoneStats.profitToday >= 0 ? 'text-blue-600' : 'text-red-600'}`}>৳{usedPhoneStats.profitToday.toLocaleString()}</div>
+             </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

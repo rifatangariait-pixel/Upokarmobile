@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export function Settings() {
   const { currentUser } = useStore();
-  const [shopName, setShopName] = useState('Angaria ERP');
+  const [shopName, setShopName] = useState('উপকার');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);

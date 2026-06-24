@@ -26,10 +26,11 @@ export function Customers() {
     fullName: '', fatherName: '', motherName: '', nidObject: '', mobile: '', alternateMobile: '', address: '', occupation: '', monthlyIncome: 0, riskRating: 'Medium Risk'
   });
 
+  const term = String(searchTerm || '').toLowerCase();
   const filteredCustomers = customers.filter(c => 
-    c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.mobile.includes(searchTerm) ||
-    c.nidObject.includes(searchTerm)
+    String(c.fullName || '').toLowerCase().includes(term) ||
+    String(c.mobile || '').includes(searchTerm) ||
+    String(c.nidObject || '').includes(searchTerm)
   );
 
   const openForm = (customer?: Customer) => {

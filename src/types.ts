@@ -1,12 +1,41 @@
 export type PhoneStatus = 'Available' | 'Reserved' | 'Sold' | 'Returned' | 'Damaged';
+export type StockType = 'NEW' | 'USED';
+export type ConditionGrade = 'A+' | 'A' | 'B' | 'C';
 
-export type UserRole = 'Admin' | 'SalesOfficer' | 'InventoryManager';
+export type UserRole = 'Admin' | 'Manager' | 'SalesOfficer' | 'InventoryManager' | 'Accountant' | 'Viewer';
+
+export type AppPermission =
+  | 'Dashboard'
+  | 'New Phone Stock'
+  | 'Diamond Phone Stock'
+  | 'Sales'
+  | 'Customer Management'
+  | 'EMI Management'
+  | 'Payments'
+  | 'Inventory'
+  | 'Reservations'
+  | 'Daily Report'
+  | 'New Phone Report'
+  | 'Diamond Phone Report'
+  | 'Combined Report'
+  | 'Diamond Secret Report'
+  | 'User Management'
+  | 'Settings'
+  | 'AI Assistant';
 
 export interface User {
   id: string;
   username: string;
+  password?: string;
+  password_hash?: string;
   role: UserRole;
   fullName: string;
+  is_active?: boolean;
+  custom_permissions?: AppPermission[];
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
 }
 
 export type ReservationStatus = 'Pending' | 'Approved' | 'Rejected';
@@ -56,6 +85,12 @@ export interface Phone {
   soldToCustomerId?: string;
   soldToCustomerName?: string;
   statusNote?: string;
+  stockType?: StockType;
+  conditionGrade?: ConditionGrade;
+  repairCost?: number;
+  batteryHealth?: string;
+  remarks?: string;
+  customerSellingPrice?: number;
 }
 
 export type RiskRating = 'Low Risk' | 'Medium Risk' | 'High Risk';
