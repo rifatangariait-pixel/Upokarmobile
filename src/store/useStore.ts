@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Phone, Customer, EMISale, Collection, StockMovement, PhoneStatus, User, ReservationRequest, ReservationStatus } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
+import bcrypt from 'bcryptjs';
 
 export interface AuditLog {
   id: string;
@@ -31,7 +32,7 @@ interface AppState {
   initFromSheets: () => Promise<void>;
   
   // Auth
-  login: (username: string, password?: string) => boolean;
+  login: (username: string, password?: string) => Promise<boolean>;
   logout: () => void;
   
   // Audit
@@ -172,14 +173,35 @@ export const useStore = create<AppState>()(
         }
       },
 
-      login: (username, password) => {
-        const user = get().users.find(u => u.username === username && (u.password === password || u.password_hash === password) && (u.is_active !== false));
-        if (user) {
+      login: async (username, password) => {
+        const user = get().users.find(u => u.username === username);
+        if (!user || user.is_active === false) {
+          console.log("User not found or inactive.");
+          return false;
+        }
+        
+        let isMatch = false;
+        if (password) {
+          if (user.password_hash && user.password_hash.startsWith('$2')) {
+            isMatch = await bcrypt.compare(password, user.password_hash);
+          } else {
+            // Fallback for older plaintext passwords
+            isMatch = (user.password === password || user.password_hash === password);
+          }
+        }
+        
+        if (isMatch) {
+          console.log("Login successful for:", username);
           const updatedUser = { ...user, last_login: new Date().toISOString() };
-          get().updateUser(user.id, { last_login: updatedUser.last_login });
+          try {
+            await get().updateUser(user.id, { last_login: updatedUser.last_login });
+          } catch (e) {
+            console.error("Failed to update last_login", e);
+          }
           set({ currentUser: updatedUser });
           return true;
         }
+        console.log("Password mismatch for:", username);
         return false;
       },
 
@@ -406,7 +428,7 @@ export const useStore = create<AppState>()(
     {
       name: 'angaria-erp-storage',
       partialize: (state) => Object.fromEntries(
-        Object.entries(state).filter(([key]) => !['users', 'currentUser', 'isLoading'].includes(key))
+        Object.entries(state).filter(([key]) => !['users', 'isLoading'].includes(key))
       ),
     }
   )

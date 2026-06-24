@@ -18,11 +18,18 @@ export function Login() {
     }
   }, [currentUser, navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(username, password);
-    if (!success) {
-      toast.error('Invalid username or password');
+    setIsLoggingIn(true);
+    try {
+      const success = await login(username, password);
+      if (!success) {
+        toast.error('Invalid username or password');
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -54,7 +61,9 @@ export function Login() {
                  onChange={(e) => setPassword(e.target.value)} 
                />
             </div>
-            <Button type="submit" className="w-full">Sign In</Button>
+            <Button type="submit" className="w-full" disabled={isLoggingIn}>
+              {isLoggingIn ? 'Signing in...' : 'Sign In'}
+            </Button>
           </form>
           
           <div className="mt-6 pt-6 border-t text-center">

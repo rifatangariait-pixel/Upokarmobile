@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import { Edit, Trash, Plus, Eye, EyeOff, Shield } from 'lucide-react';
 import { ALL_PERMISSIONS, ROLE_DEFAULT_PERMISSIONS, hasPermission } from '../utils/permissions';
 import { format } from 'date-fns';
+import bcrypt from 'bcryptjs';
 
 export function Users() {
   const { users, currentUser, addUser, updateUser, deleteUser } = useStore();
@@ -98,20 +99,19 @@ export function Users() {
           updated_at: new Date().toISOString()
         };
         if (formData.password) {
-          updates.password = formData.password;
-          updates.password_hash = formData.password; // Mocking hash
+          updates.password_hash = await bcrypt.hash(formData.password, 10);
         }
         console.log("Updating user in DB", updates);
         await updateUser(editingId, updates);
         console.log("User updated successfully");
         toast.success('User updated.');
       } else {
+        const passwordHash = await bcrypt.hash(formData.password!, 10);
         const newUser: User = {
           id: crypto.randomUUID(),
           fullName: formData.fullName,
           username: formData.username,
-          password: formData.password,
-          password_hash: formData.password,
+          password_hash: passwordHash,
           role: formData.role as UserRole,
           is_active: formData.is_active,
           custom_permissions: formData.custom_permissions,
