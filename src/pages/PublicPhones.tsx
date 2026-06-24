@@ -148,121 +148,118 @@ export function PublicPhones() {
             No phones currently available matching your search.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  {filteredPhones.map((phone, idx) => (
-<Card
-key={`${phone.id}-${idx}`}
-className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
+          <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredPhones.map((phone, idx) => (
+                <Card
+                  key={`${phone.id}-${idx}`}
+                  className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
 
->
+                >
 
-```
-{filteredPhones.map((phone, idx) => (
-<Card
-key={`${phone.id}-${idx}`}
-className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
+                  ```
+                  {filteredPhones.map((phone, idx) => (
+                    <Card
+                      key={`${phone.id}-${idx}`}
+                      className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
 
->
+                    >
 
-```
-<div className="h-64 bg-slate-50 flex items-center justify-center border-b">
-```
+                      ```
+                      <div className="h-64 bg-slate-50 flex items-center justify-center border-b">
+                        ```
 
-```
-  <img
-    src={phone.imageUrl || '/placeholder-phone.png'}
-    alt={`${phone.brand} ${phone.model}`}
-    className="max-w-full max-h-full object-contain p-4"
-    onError={(e) => {
-      e.currentTarget.src = '/placeholder-phone.png';
-    }}
-  />
-</div>
+                        
+                        <img
+                          src={phone.imageUrl || '/placeholder-phone.png'}
+                          alt={`${phone.brand} ${phone.model}`}
+                          className="max-w-full max-h-full object-contain p-4"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder-phone.png';
+                          } } />
+                      </div>
 
-<CardContent className="p-4 flex-1 flex flex-col justify-between">
-```
+                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                    
 
-    <div>
-      <h3 className="font-bold text-xl leading-tight text-slate-800">
-        {phone.brand} {phone.model}
-      </h3>
+                        <div>
+                          <h3 className="font-bold text-xl leading-tight text-slate-800">
+                            {phone.brand} {phone.model}
+                          </h3>
 
-      <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
-        <div className="bg-slate-100 rounded-lg p-2">
-          <span className="text-slate-500">RAM</span>
-          <div className="font-semibold">{phone.ram}</div>
-        </div>
+                          <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+                            <div className="bg-slate-100 rounded-lg p-2">
+                              <span className="text-slate-500">RAM</span>
+                              <div className="font-semibold">{phone.ram}</div>
+                            </div>
 
-        <div className="bg-slate-100 rounded-lg p-2">
-          <span className="text-slate-500">Storage</span>
-          <div className="font-semibold">{phone.storage}</div>
-        </div>
+                            <div className="bg-slate-100 rounded-lg p-2">
+                              <span className="text-slate-500">Storage</span>
+                              <div className="font-semibold">{phone.storage}</div>
+                            </div>
 
-        <div className="bg-slate-100 rounded-lg p-2 col-span-2">
-          <span className="text-slate-500">Color</span>
-          <div className="font-semibold">{phone.color}</div>
-        </div>
-      </div>
-    </div>
+                            <div className="bg-slate-100 rounded-lg p-2 col-span-2">
+                              <span className="text-slate-500">Color</span>
+                              <div className="font-semibold">{phone.color}</div>
+                            </div>
+                          </div>
+                        </div>
 
-    <div className="mt-5 pt-4 border-t">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <p className="text-xs text-slate-500">Price</p>
-          <div className="text-2xl font-bold text-primary">
-            ৳{getPhoneSellingPrice(phone).toLocaleString()}
-          </div>
-        </div>
+                        <div className="mt-5 pt-4 border-t">
+                          <div className="flex justify-between items-center mb-4">
+                            <div>
+                              <p className="text-xs text-slate-500">Price</p>
+                              <div className="text-2xl font-bold text-primary">
+                                ৳{getPhoneSellingPrice(phone).toLocaleString()}
+                              </div>
+                            </div>
 
-        <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-          Available
-        </span>
-      </div>
+                            <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                              Available
+                            </span>
+                          </div>
 
-      <Button
-        className="w-full h-11 font-semibold"
-        onClick={() => setSelectedPhone(phone)}
-      >
-        Reserve Phone
-      </Button>
-    </div>
-  </CardContent>
-</Card>
-))}
-</div>
-)}
-      </div>
-
-      <Modal isOpen={!!selectedPhone} onClose={() => setSelectedPhone(null)} title="Reserve Phone">
-        {selectedPhone && (
-          <form className="space-y-4" onSubmit={handleReserve}>
-            <div className="bg-muted/50 p-4 rounded-lg mb-4">
-              <h4 className="font-medium">{selectedPhone.brand} {selectedPhone.model}</h4>
-              <p className="text-sm text-muted-foreground">Price: ৳{getPhoneSellingPrice(selectedPhone).toLocaleString()}</p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Your Name</label>
-              <Input required placeholder="Enter full name" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mobile Number</label>
-              <Input required type="tel" placeholder="e.g. 01700000000" value={formData.mobile} onChange={e => setFormData({ ...formData, mobile: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Address</label>
-              <Input required placeholder="Enter your address" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Additional Notes (Optional)</label>
-              <Input placeholder="Any special requests?" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
-            </div>
-            <div className="pt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setSelectedPhone(null)}>Cancel</Button>
-              <Button type="submit">Submit Reservation</Button>
-            </div>
-          </form>
-        )}
-      </Modal>
+                          <Button
+                            className="w-full h-11 font-semibold"
+                            onClick={() => setSelectedPhone(phone)}
+                          >
+                            Reserve Phone
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ))}
+            </div><Modal isOpen={!!selectedPhone} onClose={() => setSelectedPhone(null)} title="Reserve Phone">
+                {selectedPhone && (
+                  <form className="space-y-4" onSubmit={handleReserve}>
+                    <div className="bg-muted/50 p-4 rounded-lg mb-4">
+                      <h4 className="font-medium">{selectedPhone.brand} {selectedPhone.model}</h4>
+                      <p className="text-sm text-muted-foreground">Price: ৳{getPhoneSellingPrice(selectedPhone).toLocaleString()}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Your Name</label>
+                      <Input required placeholder="Enter full name" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Mobile Number</label>
+                      <Input required type="tel" placeholder="e.g. 01700000000" value={formData.mobile} onChange={e => setFormData({ ...formData, mobile: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Address</label>
+                      <Input required placeholder="Enter your address" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Additional Notes (Optional)</label>
+                      <Input placeholder="Any special requests?" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
+                    </div>
+                    <div className="pt-4 flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSelectedPhone(null)}>Cancel</Button>
+                      <Button type="submit">Submit Reservation</Button>
+                    </div>
+                  </form>
+                )}
+              </Modal></>
     </div>
   );
 }
