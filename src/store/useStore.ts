@@ -181,14 +181,26 @@ export const useStore = create<AppState>()(
         }
         
         let isMatch = false;
-        if (password) {
-          if (user.password_hash && user.password_hash.startsWith('$2')) {
-            isMatch = await bcrypt.compare(password, user.password_hash);
-          } else {
-            // Fallback for older plaintext passwords
-            isMatch = (user.password === password || user.password_hash === password);
-          }
-        }
+
+if (password) {
+  const storedHash = String(user.password_hash || '');
+
+  if (
+    storedHash.startsWith('$2a$') ||
+    storedHash.startsWith('$2b$') ||
+    storedHash.startsWith('$2y$')
+  ) {
+    isMatch = await bcrypt.compare(
+      password,
+      storedHash
+    );
+  } else {
+    // Legacy/plain-text support
+    isMatch =
+      String(user.password || '') === String(password) ||
+      storedHash === String(password);
+  }
+}
         
         if (isMatch) {
           console.log("Login successful for:", username);
