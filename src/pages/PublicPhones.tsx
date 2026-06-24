@@ -104,7 +104,6 @@ export function PublicPhones() {
       <div className="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
   <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
 
-```
 <div className="relative max-w-md w-full">
   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
   <Input
@@ -140,7 +139,6 @@ export function PublicPhones() {
   </select>
 
 </div>
-```
 
   </div>
 </div>
@@ -168,7 +166,6 @@ export function PublicPhones() {
         />
       </div>
 
-```
   <CardContent className="p-4 flex-1 flex flex-col justify-between">
     <div>
       <h3 className="font-bold text-xl leading-tight text-slate-800">
