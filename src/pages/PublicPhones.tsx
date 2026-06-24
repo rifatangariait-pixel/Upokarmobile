@@ -141,7 +141,6 @@ export function PublicPhones() {
 </div>
 
   </div>
-</div>
 
 
         {filteredPhones.length === 0 ? (
@@ -151,7 +150,7 @@ export function PublicPhones() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
   {filteredPhones.map((phone, idx) => (
-    <Card
+    </Card
       key={`${phone.id}-${idx}`}
       className="overflow-hidden flex flex-col rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white border"
     >
