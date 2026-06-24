@@ -57,7 +57,7 @@ export function Sidebar() {
         ))}
       </div>
       <div className="p-4 border-t text-xs text-muted-foreground text-center">
-        Developed by IT Department, Upokar Mobile. All rights reserved.
+        Developed by IT Department, Upokar Mobile. All rights reserved. v1.0.0
       </div>
     </aside>
   );
