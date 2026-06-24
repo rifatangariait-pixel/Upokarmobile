@@ -23,9 +23,6 @@ export function Users() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  if (currentUser?.role !== 'Admin') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
-  }
 
   const handleOpenForm = (user?: User) => {
     if (user) {

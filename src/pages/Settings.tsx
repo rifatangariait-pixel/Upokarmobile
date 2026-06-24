@@ -33,9 +33,6 @@ export function Settings() {
     fetchSettings();
   }, [currentUser]);
 
-  if (currentUser?.role !== 'Admin') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
-  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

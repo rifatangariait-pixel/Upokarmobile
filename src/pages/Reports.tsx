@@ -12,9 +12,7 @@ export function Reports() {
   const { type } = useParams<{ type: string }>();
   const { phones, emiSales, collections, currentUser } = useStore();
 
-  if (currentUser?.role !== 'Admin') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
-  }
+  
 
   const reportType = type === 'new' ? 'NEW' : type === 'used' ? 'USED' : 'COMBINED';
   

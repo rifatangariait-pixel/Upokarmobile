@@ -13,10 +13,6 @@ export function Reservations() {
     toast.success(`Reservation ${newStatus}`);
   };
 
-  if (currentUser?.role !== 'Admin') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

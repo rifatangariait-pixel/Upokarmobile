@@ -12,9 +12,7 @@ export function Dashboard() {
   const { phones, customers, emiSales, collections, currentUser } = useStore();
   const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
 
-  if (currentUser?.role !== 'Admin') {
-    return <div className="p-8 text-center text-muted-foreground">Access Denied. Admins only.</div>;
-  }
+  
   
   const todayStr = new Date().toISOString().split('T')[0];
   
