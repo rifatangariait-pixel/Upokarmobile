@@ -2,7 +2,14 @@ export type PhoneStatus = 'Available' | 'Reserved' | 'Sold' | 'Returned' | 'Dama
 export type StockType = 'NEW' | 'USED';
 export type ConditionGrade = 'A+' | 'A' | 'B' | 'C';
 
-export type UserRole = 'Admin' | 'Manager' | 'SalesOfficer' | 'InventoryManager' | 'Accountant' | 'Viewer';
+export type UserRole =
+  | 'SuperAdmin'
+  | 'Admin'
+  | 'Manager'
+  | 'SalesOfficer'
+  | 'InventoryManager'
+  | 'Accountant'
+  | 'Viewer';
 
 export type AppPermission =
   | 'Dashboard'

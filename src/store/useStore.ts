@@ -68,6 +68,7 @@ export const useStore = create<AppState>()(
         { id: '1', username: 'Admin', password: '1030', role: 'Admin', fullName: 'System Admin' },
         { id: '2', username: 'sales', password: 'password', role: 'SalesOfficer', fullName: 'Sales Officer' },
         { id: '3', username: 'inventory', password: 'password', role: 'InventoryManager', fullName: 'Inventory Manager' },
+        { id: '4', username: 'superadmin', password: 'superadmin', role: 'SuperAdmin', fullName: 'Super Admin' },
       ],
       currentUser: null,
       reservations: [],
