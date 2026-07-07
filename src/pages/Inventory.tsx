@@ -14,10 +14,10 @@ export function Inventory({ stockType }: { stockType: StockType }) {
   const { phones, addPhone, updatePhone, deletePhone, changePhoneStatus, stockMovements, isLoading, currentUser, customers } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PhoneStatus | 'All'>('All');
-  
+
   const canManageInventory = currentUser?.role === 'Admin' || currentUser?.role === 'InventoryManager';
   const canDelete = currentUser?.role === 'Admin';
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,8 +38,8 @@ export function Inventory({ stockType }: { stockType: StockType }) {
   const filteredPhones = safePhones.filter(p => {
     const isSameType = (p.stockType || 'NEW') === stockType;
     const matchesSearch = String(p.model || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
-                          String(p.brand || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
-                          String(p.imei1 || '').includes(searchTerm || '');
+      String(p.brand || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
+      String(p.imei1 || '').includes(searchTerm || '');
     const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
     return matchesSearch && matchesStatus && isSameType;
   });
@@ -77,7 +77,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
       toast.error('Brand, Model, and IMEI 1 are required');
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       if (editingPhone) {
@@ -131,7 +131,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
   const handleStatusModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!statusActionPhoneId || !statusActionNewStatus) return;
-    
+
     // For Sold/Returned we might require customer, for Reserved we require customer
     if (!statusActionCustomerId) {
       toast.error('Please select a customer.');
@@ -139,14 +139,14 @@ export function Inventory({ stockType }: { stockType: StockType }) {
     }
 
     const customer = safeCustomers.find(c => c.id === statusActionCustomerId);
-    
+
     setIsStatusSubmitting(true);
     try {
       await changePhoneStatus(
-        statusActionPhoneId, 
-        statusActionNewStatus, 
-        statusActionNote, 
-        statusActionCustomerId, 
+        statusActionPhoneId,
+        statusActionNewStatus,
+        statusActionNote,
+        statusActionCustomerId,
         customer?.fullName || ''
       );
       toast.success(`Status successfully changed to ${statusActionNewStatus}`);
@@ -168,7 +168,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2" onClick={() => setIsHistoryModalOpen(true)}>
-               <History className="w-4 h-4" /> Status History
+              <History className="w-4 h-4" /> Status History
             </Button>
             <Button variant="outline" className="gap-2" onClick={handleExport}>
               <Download className="w-4 h-4" /> Export
@@ -195,7 +195,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
               </div>
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
-                <select 
+                <select
                   className="h-9 px-3 rounded-md border border-input bg-transparent text-sm"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -253,21 +253,21 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                         </td>
                         <td className="px-4 py-3 text-right">
                           {stockType === 'USED' ? (
-  <span className="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">
-    Confidential
-  </span>
-) : (
-  <div className="font-medium text-primary">
-    ৳{Number(phone.sellingPrice).toLocaleString()}
-  </div>
-)}
+                            <span className="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">
+                              Confidential
+                            </span>
+                          ) : (
+                            <div className="font-medium text-primary">
+                              ৳{Number(phone.sellingPrice).toLocaleString()}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs">{phone.supplier}</td>
                         <td className="px-4 py-3 text-xs">
                           {phone.status === 'Reserved' && phone.reservedForCustomerName && `Reserved For: ${phone.reservedForCustomerName}`}
                           {phone.status === 'Sold' && phone.soldToCustomerName && `Sold To: ${phone.soldToCustomerName}`}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 y-3">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                             ${phone.status === 'Available' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ''}
                             ${phone.status === 'Sold' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : ''}
@@ -290,17 +290,17 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                               <Button variant="ghost" size="icon" onClick={() => handleDelete(phone.id)} className="text-destructive" title="Delete"><Trash className="w-4 h-4" /></Button>
                             )}
                             {canManageInventory && (
-                              <select 
-                                 className="text-xs border border-input rounded-md h-8 bg-transparent"
-                                 value={phone.status}
-                                 onChange={(e) => handleStatusChangeClick(phone.id, e.target.value as PhoneStatus)}
+                              <select
+                                className="text-xs border border-input rounded-md h-8 bg-transparent"
+                                value={phone.status}
+                                onChange={(e) => handleStatusChangeClick(phone.id, e.target.value as PhoneStatus)}
                               >
-                                 <option value="" disabled hidden>Change</option>
-                                 <option value="Available">Available</option>
-                                 <option value="Reserved">Reserved</option>
-                                 <option value="Sold">Sold</option>
-                                 <option value="Returned">Returned</option>
-                                 <option value="Damaged">Damaged</option>
+                                <option value="" disabled hidden>Change</option>
+                                <option value="Available">Available</option>
+                                <option value="Reserved">Reserved</option>
+                                <option value="Sold">Sold</option>
+                                <option value="Returned">Returned</option>
+                                <option value="Damaged">Damaged</option>
                               </select>
                             )}
                           </div>
@@ -329,7 +329,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                 <label className="text-sm font-medium">IMEI 1</label>
                 <Input required value={formData.imei1} onChange={e => setFormData({ ...formData, imei1: e.target.value })} placeholder="15 digit IMEI" />
               </div>
-              
+
               {(stockType === 'NEW' || stockType === 'USED') && (
                 <>
                   <div className="space-y-2">
@@ -345,29 +345,29 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                     <Input value={formData.color} onChange={e => setFormData({ ...formData, color: e.target.value })} placeholder="e.g. Black" />
                   </div>
                   <div className="space-y-2">
-  <label className="text-sm font-medium">
-    Phone Image URL
-  </label>
+                    <label className="text-sm font-medium">
+                      Phone Image URL
+                    </label>
 
-  <Input
-    value={formData.imageUrl || ''}
-    onChange={e =>
-      setFormData({
-        ...formData,
-        imageUrl: e.target.value
-      })
-    }
-    placeholder="https://example.com/phone.jpg"
-  />
+                    <Input
+                      value={formData.imageUrl || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          imageUrl: e.target.value
+                        })
+                      }
+                      placeholder="https://example.com/phone.jpg"
+                    />
 
-  {formData.imageUrl && (
-    <img
-      src={formData.imageUrl}
-      alt="Preview"
-      className="w-24 h-24 object-cover rounded border mt-2"
-    />
-  )}
-</div>
+                    {formData.imageUrl && (
+                      <img
+                        src={formData.imageUrl}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded border mt-2"
+                      />
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Supplier</label>
                     <Input value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} />
@@ -388,7 +388,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
               )}
               {(stockType === 'NEW' || stockType === 'USED') && (
                 <>
-                  { currentUser?.role === 'Admin' && (
+                  {currentUser?.role === 'Admin' && (
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Customer Selling Price</label>
                       <Input type="number" value={formData.customerSellingPrice || ''} onChange={e => setFormData({ ...formData, customerSellingPrice: Number(e.target.value) })} />
@@ -409,7 +409,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                     <label className="text-sm font-medium">Battery Health (%)</label>
                     <Input value={formData.batteryHealth} onChange={e => setFormData({ ...formData, batteryHealth: e.target.value })} placeholder="e.g. 85%" />
                   </div>
-                  { currentUser?.role === 'Admin' && (
+                  {currentUser?.role === 'Admin' && (
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Repair Cost</label>
                       <Input type="number" value={formData.repairCost || ''} onChange={e => setFormData({ ...formData, repairCost: Number(e.target.value) })} />
@@ -424,7 +424,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
                 <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  value={formData.status} 
+                  value={formData.status}
                   onChange={e => {
                     const newStatus = e.target.value as PhoneStatus;
                     const updates: Partial<Phone> = { status: newStatus };
@@ -449,16 +449,16 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                   <label className="text-sm font-medium">
                     {formData.status === 'Reserved' ? 'Reserved For Customer' : 'Sold To Customer'}
                   </label>
-                  <select 
+                  <select
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                     value={formData.status === 'Reserved' ? formData.reservedForCustomerId || '' : formData.soldToCustomerId || ''}
                     onChange={(e) => {
                       const custId = e.target.value;
                       const cust = safeCustomers.find(c => c.id === custId);
                       if (formData.status === 'Reserved') {
-                         setFormData({ ...formData, reservedForCustomerId: custId, reservedForCustomerName: cust?.fullName, soldToCustomerId: '', soldToCustomerName: '' });
+                        setFormData({ ...formData, reservedForCustomerId: custId, reservedForCustomerName: cust?.fullName, soldToCustomerId: '', soldToCustomerName: '' });
                       } else {
-                         setFormData({ ...formData, soldToCustomerId: custId, soldToCustomerName: cust?.fullName, reservedForCustomerId: '', reservedForCustomerName: '' });
+                        setFormData({ ...formData, soldToCustomerId: custId, soldToCustomerName: cust?.fullName, reservedForCustomerId: '', reservedForCustomerName: '' });
                       }
                     }}
                     required
@@ -477,7 +477,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Phone'}</Button>
             </div>
-           </form>
+          </form>
         </Modal>
 
         <Modal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} title="Status History Audit Trail">
@@ -522,7 +522,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
           <form onSubmit={handleStatusModalSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Customer (Required)</label>
-              <select 
+              <select
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                 value={statusActionCustomerId}
                 onChange={e => setStatusActionCustomerId(e.target.value)}
