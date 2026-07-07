@@ -270,15 +270,17 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {stockType === 'USED' ? (
-                            <span className="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">
-                              Confidential
-                            </span>
-                          ) : (
-                            <div className="font-medium text-primary">
-                              ৳{Number(phone.sellingPrice).toLocaleString()}
+
+                          {currentUser?.role === "SuperAdmin" && (
+                            <div className="text-xs text-muted-foreground">
+                              Buy: ৳{Number(phone.purchasePrice || 0).toLocaleString()}
                             </div>
                           )}
+
+                          <div className="font-medium text-primary">
+                            ৳{Number(phone.sellingPrice || 0).toLocaleString()}
+                          </div>
+
                         </td>
                         <td className="px-4 py-3 text-xs">{phone.supplier}</td>
                         <td className="px-4 py-3 text-xs">
