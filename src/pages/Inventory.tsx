@@ -218,7 +218,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                     <th className="px-4 py-3 font-medium">Brand & Model</th>
                     <th className="px-4 py-3 font-medium">IMEI 1</th>
                     <th className="px-4 py-3 font-medium">Specs</th>
-                    <th className="px-4 py-3 font-medium text-right">Price (Buy/Sell)</th>
+                    <th className="px-4 py-3 font-medium text-right">Selling Price</th>
                     <th className="px-4 py-3 font-medium">Supplier</th>
                     <th className="px-4 py-3 font-medium">Reserved/Sold For</th>
                     <th className="px-4 py-3 font-medium">Status</th>
@@ -256,11 +256,9 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                              <span className="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded">Confidential</span>
                           ) : (
                             <>
-                              <div className="text-xs text-muted-foreground line-through">
-                                Buy: ৳{Number(phone.purchasePrice).toLocaleString()}
-                              </div>
-                              <div className="font-medium text-primary">৳{Number(phone.sellingPrice).toLocaleString()}</div>
-                            </>
+                              <div className="font-medium text-primary">
+  ৳{Number(phone.sellingPrice).toLocaleString()}
+</div>
                           )}
                         </td>
                         <td className="px-4 py-3 text-xs">{phone.supplier}</td>
