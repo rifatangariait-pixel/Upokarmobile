@@ -35,13 +35,31 @@ export function Inventory({ stockType }: { stockType: StockType }) {
   const safeCustomers = customers || [];
   const safeStockMovements = stockMovements || [];
 
-  const filteredPhones = safePhones.filter(p => {
+  const filteredPhones = safePhones.filter((p) => {
+    // Hide empty/invalid records
+    if (
+      !p.brand?.trim() &&
+      !p.model?.trim() &&
+      !p.imei1?.trim()
+    ) {
+      return false;
+    }
+
     const isSameType = (p.stockType || 'NEW') === stockType;
-    const matchesSearch = String(p.model || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
-      String(p.brand || '').toLowerCase().includes(String(searchTerm || '').toLowerCase()) ||
-      String(p.imei1 || '').includes(searchTerm || '');
-    const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
-    return matchesSearch && matchesStatus && isSameType;
+
+    const matchesSearch =
+      String(p.model || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      String(p.brand || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      String(p.imei1 || "").includes(searchTerm);
+
+    const matchesStatus =
+      statusFilter === "All" || p.status === statusFilter;
+
+    return isSameType && matchesSearch && matchesStatus;
   });
 
   const handleExport = () => {
