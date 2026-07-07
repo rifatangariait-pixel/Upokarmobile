@@ -143,6 +143,7 @@ export const useStore = create<AppState>()(
             GoogleSheetsService.getAll('ReservationRequests'),
             GoogleSheetsService.getAll('Users')
           ]);
+          console.log("Google Users:", usersRes);
 
           if (phonesRes && phonesRes.length > 0) {
             const mappedPhones = (phonesRes as Phone[]).map(p => ({
@@ -198,7 +199,11 @@ export const useStore = create<AppState>()(
       },
 
       login: async (username, password) => {
-        const user = get().users.find(u => u.username === username);
+        const user = get().users.find(
+          u =>
+            String(u.username).trim().toLowerCase() ===
+            String(username).trim().toLowerCase()
+        );
         if (!user || user.is_active === false) {
           console.log("User not found or inactive.");
           return false;
