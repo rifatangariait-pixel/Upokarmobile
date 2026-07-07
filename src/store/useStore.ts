@@ -230,7 +230,12 @@ export const useStore = create<AppState>()(
           console.log("Login successful for:", username);
           const updatedUser = { ...user, last_login: new Date().toISOString() };
           try {
-            await get().updateUser(user.id, { last_login: updatedUser.last_login });
+            // Only update users that came from Google Sheets
+            if (user.role !== "SuperAdmin") {
+              await get().updateUser(user.id, {
+                last_login: updatedUser.last_login,
+              });
+            }
           } catch (e) {
             console.error("Failed to update last_login", e);
           }
