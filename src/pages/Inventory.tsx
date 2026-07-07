@@ -331,7 +331,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                 <Input required value={formData.imei1} onChange={e => setFormData({ ...formData, imei1: e.target.value })} placeholder="15 digit IMEI" />
               </div>
               
-              {stockType === 'NEW' && (
+              {(stockType === 'NEW' || stockType === 'USED') && (
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">RAM</label>
@@ -375,7 +375,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                   </div>
                 </>
               )}
-              { (stockType === 'NEW' || currentUser?.role === 'Admin') && (
+              {(stockType === 'NEW' || stockType === 'USED') && (
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{stockType === 'USED' ? 'Buying Price' : 'Purchase Price'}</label>
@@ -387,7 +387,7 @@ export function Inventory({ stockType }: { stockType: StockType }) {
                   </div>
                 </>
               )}
-              {stockType === 'USED' && (
+              {(stockType === 'NEW' || stockType === 'USED') && (
                 <>
                   { currentUser?.role === 'Admin' && (
                     <div className="space-y-2">
