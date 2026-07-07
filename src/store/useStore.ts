@@ -22,19 +22,19 @@ interface AppState {
   currentUser: User | null;
   reservations: ReservationRequest[];
   auditLogs: AuditLog[];
-  
+
   addUser: (user: User) => Promise<void>;
   updateUser: (id: string, user: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
-  
+
   // App Sync State
   isLoading: boolean;
   initFromSheets: () => Promise<void>;
-  
+
   // Auth
   login: (username: string, password?: string) => Promise<boolean>;
   logout: () => void;
-  
+
   // Audit
   addAuditLog: (action: string) => void;
 
@@ -47,11 +47,11 @@ interface AppState {
   updatePhone: (id: string, updates: Partial<Phone>) => Promise<void>;
   deletePhone: (id: string) => Promise<void>;
   changePhoneStatus: (productId: string, newStatus: PhoneStatus, note?: string, customerId?: string, customerName?: string) => Promise<void>;
-  
+
   addCustomer: (customer: Customer) => Promise<void>;
   updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
-  
+
   addEmiSale: (sale: EMISale) => Promise<void>;
   addCollection: (collection: Collection) => Promise<void>;
 }
@@ -138,15 +138,15 @@ export const useStore = create<AppState>()(
         set({ isLoading: true });
         try {
           const [phonesRes, customersRes, emiSalesRes, collectionsRes, smRes, resvRes, usersRes] = await Promise.all([
-             GoogleSheetsService.getAll('Products'),
-             GoogleSheetsService.getAll('Customers'),
-             GoogleSheetsService.getAll('EMISales'),
-             GoogleSheetsService.getAll('EMICollections'),
-             GoogleSheetsService.getAll('StockMovement'),
-             GoogleSheetsService.getAll('ReservationRequests'),
-             GoogleSheetsService.getAll('Users')
+            GoogleSheetsService.getAll('Products'),
+            GoogleSheetsService.getAll('Customers'),
+            GoogleSheetsService.getAll('EMISales'),
+            GoogleSheetsService.getAll('EMICollections'),
+            GoogleSheetsService.getAll('StockMovement'),
+            GoogleSheetsService.getAll('ReservationRequests'),
+            GoogleSheetsService.getAll('Users')
           ]);
-          
+
           if (phonesRes && phonesRes.length > 0) {
             const mappedPhones = (phonesRes as Phone[]).map(p => ({
               ...p,
@@ -160,12 +160,38 @@ export const useStore = create<AppState>()(
           if (smRes && smRes.length > 0) set({ stockMovements: smRes as StockMovement[] });
           if (resvRes && resvRes.length > 0) set({ reservations: resvRes as ReservationRequest[] });
           if (usersRes && usersRes.length > 0) {
-            const parsedUsers = (usersRes as any[]).map(u => ({
+            const parsedUsers = (usersRes as any[]).map((u) => ({
               ...u,
-              is_active: u.is_active === undefined ? true : u.is_active === 'true' || u.is_active === true,
-              custom_permissions: u.custom_permissions ? (typeof u.custom_permissions === 'string' ? JSON.parse(u.custom_permissions) : u.custom_permissions) : []
+              is_active:
+                u.is_active === undefined
+                  ? true
+                  : u.is_active === "true" || u.is_active === true,
+              custom_permissions: u.custom_permissions
+                ? typeof u.custom_permissions === "string"
+                  ? JSON.parse(u.custom_permissions)
+                  : u.custom_permissions
+                : [],
             }));
-            set({ users: parsedUsers as User[] });
+
+            // Local SuperAdmin (cannot be removed)
+            const localSuperAdmins = get().users.filter(
+              (u) => u.role === "SuperAdmin"
+            );
+
+            // Remove duplicate usernames from Google Sheet
+            const sheetUsers = parsedUsers.filter(
+              (sheetUser) =>
+                !localSuperAdmins.some(
+                  (localUser) =>
+                    localUser.username.toLowerCase() ===
+                    String(sheetUser.username).toLowerCase()
+                )
+            );
+
+            // Merge Local SuperAdmin + Google Sheet Users
+            set({
+              users: [...localSuperAdmins, ...sheetUsers] as User[],
+            });
           }
         } catch (err) {
           console.error("Failed to sync from Google Sheets.", err);
@@ -180,29 +206,29 @@ export const useStore = create<AppState>()(
           console.log("User not found or inactive.");
           return false;
         }
-        
+
         let isMatch = false;
 
-if (password) {
-  const storedHash = String(user.password_hash || '');
+        if (password) {
+          const storedHash = String(user.password_hash || '');
 
-  if (
-    storedHash.startsWith('$2a$') ||
-    storedHash.startsWith('$2b$') ||
-    storedHash.startsWith('$2y$')
-  ) {
-    isMatch = await bcrypt.compare(
-      password,
-      storedHash
-    );
-  } else {
-    // Legacy/plain-text support
-    isMatch =
-      String(user.password || '') === String(password) ||
-      storedHash === String(password);
-  }
-}
-        
+          if (
+            storedHash.startsWith('$2a$') ||
+            storedHash.startsWith('$2b$') ||
+            storedHash.startsWith('$2y$')
+          ) {
+            isMatch = await bcrypt.compare(
+              password,
+              storedHash
+            );
+          } else {
+            // Legacy/plain-text support
+            isMatch =
+              String(user.password || '') === String(password) ||
+              storedHash === String(password);
+          }
+        }
+
         if (isMatch) {
           console.log("Login successful for:", username);
           const updatedUser = { ...user, last_login: new Date().toISOString() };
@@ -235,7 +261,7 @@ if (password) {
       updateReservationStatus: async (id, newStatus) => {
         const previous = get().reservations;
         const reservation = previous.find(r => r.id === id);
-        
+
         if (!reservation) return;
 
         set((state) => ({
@@ -252,7 +278,7 @@ if (password) {
           alert("Error updating reservation: " + error.message);
         }
       },
-      
+
       addPhone: async (phone) => {
         set((state) => ({ phones: [phone, ...state.phones] })); // Optimistic UI Update
         try {
@@ -262,18 +288,18 @@ if (password) {
           alert("Error adding phone: " + error.message);
         }
       },
-      
+
       updatePhone: async (id, updates) => {
         const previousPhones = get().phones;
         set((state) => ({ phones: state.phones.map(p => p.id === id ? { ...p, ...updates } : p) }));
         try {
           await GoogleSheetsService.update('Products', id, updates);
         } catch (error: any) {
-             set({ phones: previousPhones });
-             alert("Error updating phone: " + error.message);
+          set({ phones: previousPhones });
+          alert("Error updating phone: " + error.message);
         }
       },
-      
+
       deletePhone: async (id) => {
         const previousPhones = get().phones;
         set((state) => ({ phones: state.phones.filter(p => p.id !== id) }));
@@ -284,16 +310,16 @@ if (password) {
           alert("Error deleting phone: " + error.message);
         }
       },
-      
+
       changePhoneStatus: async (productId, newStatus, note = '', customerId?: string, customerName?: string) => {
         const phone = get().phones.find(p => p.id === productId);
         if (!phone || phone.status === newStatus) return;
-        
+
         const oldStatus = phone.status;
         const previousPhones = get().phones;
         const previousMovements = get().stockMovements;
         const previousSales = get().emiSales;
-        
+
         const movement: StockMovement = {
           id: crypto.randomUUID(),
           productId: phone.id,
@@ -305,9 +331,9 @@ if (password) {
           note,
           customerName
         };
-        
+
         let updates: Partial<Phone> = { status: newStatus, statusNote: note };
-        
+
         if (newStatus === 'Reserved') {
           updates.reservedForCustomerId = customerId;
           updates.reservedForCustomerName = customerName;
@@ -324,29 +350,29 @@ if (password) {
           let updatedSales = state.emiSales;
           // Return Logic
           if (newStatus === 'Returned') {
-             updatedSales = state.emiSales.filter(s => !(s.phoneId === phone.id && s.status === 'Active'));
+            updatedSales = state.emiSales.filter(s => !(s.phoneId === phone.id && s.status === 'Active'));
           }
-          
+
           return {
-             phones: state.phones.map(p => p.id === productId ? { ...p, ...updates } : p),
-             stockMovements: [movement, ...state.stockMovements],
-             emiSales: updatedSales
+            phones: state.phones.map(p => p.id === productId ? { ...p, ...updates } : p),
+            stockMovements: [movement, ...state.stockMovements],
+            emiSales: updatedSales
           };
         });
-        
+
         try {
-           const updateRes = await GoogleSheetsService.update('Products', productId, updates);
-           await GoogleSheetsService.create('StockMovement', {
-              ...movement,
-              id: updateRes.id || '' // use created or something, let GAS handle id
-           });
-           // Backend shouldn't strictly need us to manually delete EMI, but ideally we mark it refunded or so
+          const updateRes = await GoogleSheetsService.update('Products', productId, updates);
+          await GoogleSheetsService.create('StockMovement', {
+            ...movement,
+            id: updateRes.id || '' // use created or something, let GAS handle id
+          });
+          // Backend shouldn't strictly need us to manually delete EMI, but ideally we mark it refunded or so
         } catch (error: any) {
-           set({ phones: previousPhones, stockMovements: previousMovements, emiSales: previousSales });
-           alert("Error changing status: " + error.message);
+          set({ phones: previousPhones, stockMovements: previousMovements, emiSales: previousSales });
+          alert("Error changing status: " + error.message);
         }
       },
-      
+
       addCustomer: async (customer) => {
         set((state) => ({ customers: [customer, ...state.customers] }));
         try {
@@ -356,7 +382,7 @@ if (password) {
           alert("Error adding customer: " + error.message);
         }
       },
-      
+
       updateCustomer: async (id, updates) => {
         const previous = get().customers;
         set((state) => ({ customers: state.customers.map(c => c.id === id ? { ...c, ...updates } : c) }));
@@ -367,7 +393,7 @@ if (password) {
           alert("Error updating customer: " + error.message);
         }
       },
-      
+
       deleteCustomer: async (id) => {
         const previous = get().customers;
         set((state) => ({ customers: state.customers.filter(c => c.id !== id) }));
@@ -378,40 +404,40 @@ if (password) {
           alert("Error deleting customer: " + error.message);
         }
       },
-      
+
       addEmiSale: async (sale) => {
         const previousSales = get().emiSales;
         const previousPhones = get().phones;
-        
-        set((state) => ({ 
+
+        set((state) => ({
           emiSales: [sale, ...state.emiSales],
           phones: state.phones.map(p => p.id === sale.phoneId ? { ...p, status: 'Sold' } : p)
         }));
-        
+
         try {
           await GoogleSheetsService.create('EMISales', sale);
           await GoogleSheetsService.update('Products', sale.phoneId, { status: 'Sold' });
         } catch (error: any) {
-           set({ emiSales: previousSales, phones: previousPhones });
-           alert("Error creating sale: " + error.message);
+          set({ emiSales: previousSales, phones: previousPhones });
+          alert("Error creating sale: " + error.message);
         }
       },
-      
+
       addCollection: async (collection) => {
         const previousSales = get().emiSales;
         const previousCollections = get().collections;
-        
+
         set((state) => {
           const sale = state.emiSales.find(s => s.id === collection.emiSaleId);
           if (!sale) return state;
-          
+
           let newStatus = sale.status;
           let newPaid = sale.paidInstallments;
           if (collection.paymentType === 'Monthly Installment') {
-             newPaid += 1;
-             if (newPaid >= sale.emiMonths) newStatus = 'Completed';
+            newPaid += 1;
+            if (newPaid >= sale.emiMonths) newStatus = 'Completed';
           }
-          
+
           return {
             collections: [collection, ...state.collections],
             emiSales: state.emiSales.map(s => s.id === collection.emiSaleId ? {
@@ -421,20 +447,20 @@ if (password) {
             } : s)
           };
         });
-        
+
         try {
-           await GoogleSheetsService.create('EMICollections', collection);
-           // Also push the parent EMI status update remotely
-           const updatedSale = get().emiSales.find(s => s.id === collection.emiSaleId);
-           if (updatedSale) {
-               await GoogleSheetsService.update('EMISales', updatedSale.id, { 
-                   paidInstallments: updatedSale.paidInstallments, 
-                   status: updatedSale.status 
-               });
-           }
+          await GoogleSheetsService.create('EMICollections', collection);
+          // Also push the parent EMI status update remotely
+          const updatedSale = get().emiSales.find(s => s.id === collection.emiSaleId);
+          if (updatedSale) {
+            await GoogleSheetsService.update('EMISales', updatedSale.id, {
+              paidInstallments: updatedSale.paidInstallments,
+              status: updatedSale.status
+            });
+          }
         } catch (error: any) {
-           set({ collections: previousCollections, emiSales: previousSales });
-           alert("Error adding collection: " + error.message);
+          set({ collections: previousCollections, emiSales: previousSales });
+          alert("Error adding collection: " + error.message);
         }
       }
     }),
