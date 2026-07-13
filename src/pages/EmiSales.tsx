@@ -15,20 +15,40 @@ import { hasPermission } from '../utils/permissions';
 
 const getPhoneSellingPrice = (phone: Phone | undefined): number => {
   if (!phone) return 0;
+
   if (phone.stockType === 'USED' || phone.stockType === 'DIAMOND') {
     return phone.customerSellingPrice || 0;
   }
+
   return phone.sellingPrice || 0;
 };
 
+const safeFormatDate = (
+  value: string | Date | undefined | null,
+  pattern = 'dd/MM/yyyy'
+) => {
+  if (!value) return '-';
 
-const getPhoneSellingPrice = (phone: Phone | undefined): number => {
-  if (!phone) return 0;
-  if (phone.stockType === 'USED' || phone.stockType === 'DIAMOND') {
-    return phone.customerSellingPrice || 0;
-  }
-  return phone.sellingPrice || 0;
+  const date = new Date(value);
+
+  if (!isValid(date)) return '-';
+
+  return format(date, pattern);
 };
+
+const safeLocaleDate = (
+  value: string | Date | undefined | null
+) => {
+  if (!value) return '';
+
+  const date = new Date(value);
+
+  if (!isValid(date)) return '';
+
+  return date.toLocaleDateString();
+};
+
+export function EmiSales({ stockType }: { stockType: StockType }) {
 
 const safeFormatDate = (
   value: string | Date | undefined | null,
