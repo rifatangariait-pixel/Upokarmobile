@@ -12,31 +12,61 @@ export function Reports() {
   const { type } = useParams<{ type: string }>();
   const { phones, emiSales, collections, currentUser } = useStore();
 
-  
+
 
   const reportType = type === 'new' ? 'NEW' : type === 'used' ? 'USED' : 'COMBINED';
-  
+
   // Calculate specific metrics
   const targetPhones = phones.filter(p => reportType === 'COMBINED' ? true : (p.stockType || 'NEW') === reportType);
-  
+
   // Total Stock Count
   const totalStock = targetPhones.filter(p => p.status === 'Available').length;
-  
+
   // Sold Quantity
-  const soldPhones = targetPhones.filter(p => p.status === 'Sold');
-  const soldQuantity = soldPhones.length;
-  
+  const soldPhones = emiSales
+    .map((sale) => {
+      const phone = phones.find((p) => p.id === sale.phoneId);
+
+      if (!phone) return null;
+
+      if (
+        reportType !== 'COMBINED' &&
+        (phone.stockType || 'NEW') !== reportType
+      ) {
+        return null;
+      }
+
+      return {
+        saleId: sale.id,
+        saleDate: sale.saleDate,
+        customer: sale.customerName,
+        phone,
+        totalPrice: sale.totalPrice,
+        downPayment: sale.downPayment,
+        monthly: sale.monthlyInstallment,
+        profit:
+          phone.sellingPrice -
+          phone.purchasePrice -
+          (phone.repairCost || 0),
+      };
+    })
+    .filter(Boolean);
+  const totalSales = soldPhones.reduce(
+    (sum, s) => sum + Number(s.totalPrice),
+    0
+  );
+
   // Purchased Quantity
   const purchasedQuantity = targetPhones.length;
 
   // Collection Calculation
   const relevantSalesIds = emiSales.filter(s => {
-      const p = phones.find(ph => ph.id === s.phoneId);
-      return p && (reportType === 'COMBINED' || (p.stockType || 'NEW') === reportType);
+    const p = phones.find(ph => ph.id === s.phoneId);
+    return p && (reportType === 'COMBINED' || (p.stockType || 'NEW') === reportType);
   }).map(s => s.id);
   const relevantCollections = collections.filter(c => relevantSalesIds.includes(c.emiSaleId));
   const totalCollection = relevantCollections.reduce((sum, c) => sum + Number(c.amountPaid), 0);
-  
+
   // Total Sales Value
   const relevantSales = emiSales.filter(s => relevantSalesIds.includes(s.id));
   const totalSalesValue = relevantSales.reduce((sum, s) => sum + Number(s.totalPrice || 0), 0);
@@ -84,7 +114,7 @@ export function Reports() {
     }
 
     const keys = Object.keys(data[0]);
-    
+
     let html = `
       <html>
         <head>
@@ -146,7 +176,7 @@ export function Reports() {
             <div className="text-3xl font-bold">{totalStock}</div>
           </CardContent>
         </Card>
-        
+
         {reportType === 'USED' && (
           <Card>
             <CardHeader className="py-4 border-b">
@@ -168,7 +198,7 @@ export function Reports() {
             </CardContent>
           </Card>
         )}
-        
+
         {reportType === 'COMBINED' && (
           <Card>
             <CardHeader className="py-4 border-b">
@@ -195,49 +225,49 @@ export function Reports() {
           </CardHeader>
           <CardContent className="pt-4">
             <div className={`text-3xl font-bold ${totalProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-               ৳{totalProfit.toLocaleString()}
+              ৳{totalProfit.toLocaleString()}
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       <Card>
         <CardHeader className="py-4 border-b">
           <CardTitle>Detailed List</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto max-h-[500px]">
-             <table className="w-full text-sm text-left">
-               <thead className="bg-muted text-muted-foreground sticky top-0">
-                 <tr>
-                   <th className="px-4 py-3 font-medium">Brand & Model</th>
-                   <th className="px-4 py-3 font-medium">IMEI 1</th>
-                   {reportType === 'COMBINED' && <th className="px-4 py-3 font-medium">Type</th>}
-                   <th className="px-4 py-3 font-medium">Status</th>
-                   <th className="px-4 py-3 font-medium text-right">Purchase</th>
-                   <th className="px-4 py-3 font-medium text-right">Sell</th>
-                   {(reportType === 'USED' || reportType === 'COMBINED') && <th className="px-4 py-3 font-medium text-right">Repair Cost</th>}
-                 </tr>
-               </thead>
-               <tbody className="divide-y">
-                 {targetPhones.map((p, i) => (
-                   <tr key={i} className="hover:bg-muted/50">
-                     <td className="px-4 py-3">{p.brand} {p.model}</td>
-                     <td className="px-4 py-3 font-mono text-xs">{p.imei1}</td>
-                     {reportType === 'COMBINED' && <td className="px-4 py-3 text-xs text-muted-foreground">{(p.stockType || 'NEW') === 'NEW' ? 'NEW' : 'DIAMOND'}</td>}
-                     <td className="px-4 py-3">{p.status}</td>
-                     <td className="px-4 py-3 text-right">৳{Number(p.purchasePrice).toLocaleString()}</td>
-                     <td className="px-4 py-3 text-right">৳{Number(p.sellingPrice).toLocaleString()}</td>
-                     {(reportType === 'USED' || reportType === 'COMBINED') && <td className="px-4 py-3 text-right">৳{Number(p.repairCost || 0).toLocaleString()}</td>}
-                   </tr>
-                 ))}
-                 {targetPhones.length === 0 && (
-                   <tr>
-                     <td colSpan={7} className="p-8 text-center text-muted-foreground">No records found.</td>
-                   </tr>
-                 )}
-               </tbody>
-             </table>
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted text-muted-foreground sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Brand & Model</th>
+                  <th className="px-4 py-3 font-medium">IMEI 1</th>
+                  {reportType === 'COMBINED' && <th className="px-4 py-3 font-medium">Type</th>}
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Purchase</th>
+                  <th className="px-4 py-3 font-medium text-right">Sell</th>
+                  {(reportType === 'USED' || reportType === 'COMBINED') && <th className="px-4 py-3 font-medium text-right">Repair Cost</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {targetPhones.map((p, i) => (
+                  <tr key={i} className="hover:bg-muted/50">
+                    <td className="px-4 py-3">{p.brand} {p.model}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{p.imei1}</td>
+                    {reportType === 'COMBINED' && <td className="px-4 py-3 text-xs text-muted-foreground">{(p.stockType || 'NEW') === 'NEW' ? 'NEW' : 'DIAMOND'}</td>}
+                    <td className="px-4 py-3">{p.status}</td>
+                    <td className="px-4 py-3 text-right">৳{Number(p.purchasePrice).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right">৳{Number(p.sellingPrice).toLocaleString()}</td>
+                    {(reportType === 'USED' || reportType === 'COMBINED') && <td className="px-4 py-3 text-right">৳{Number(p.repairCost || 0).toLocaleString()}</td>}
+                  </tr>
+                ))}
+                {targetPhones.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">No records found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
