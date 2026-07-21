@@ -55,6 +55,7 @@ export function Reports() {
     (sum, s) => sum + Number(s.totalPrice),
     0
   );
+  const soldQuantity = soldPhones.length;
 
   // Purchased Quantity
   const purchasedQuantity = targetPhones.length;
